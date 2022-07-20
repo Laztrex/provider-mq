@@ -8,7 +8,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"provider-mq/internal/consts"
+	"provider_mq/internal/consts"
+	"provider_mq/internal/schemas"
 )
 
 func Predict() {
@@ -41,8 +42,6 @@ func Predict() {
 			waitReplyModel(msgRequest.RmqMessage.Body, msgRequest.RmqMessage) // answer =
 
 			// PublishChannel <- *msgRequest
-
-			return
 			// add case <- channel to Errors form http
 
 		}
@@ -85,7 +84,26 @@ func waitReplyModel(msgToModel []byte, msg amqp.Delivery) {
 		log.Error().Err(err).Msg("Error read Response")
 	}
 
-	PublishChannel <- response
+	//delete(ReplyChannels, msg.CorrelationId)
+	//msg.Ack(true)
 
-	fmt.Print(response)
+	err = msg.Ack(true)
+	if err != nil {
+		log.Printf("ERROR: fail to ack: %s", err.Error())
+	}
+
+	headers := make(amqp.Table)
+
+	for k, v := range resp.Header {
+		headers[k] = v[0]
+		//headers[textproto.CanonicalMIMEHeaderKey(k)] = v[0]
+	}
+
+	msgReply := &schemas.MessageReply{
+		CorrelationId: msg.CorrelationId,
+		Data:          response,
+		Headers:       headers,
+	}
+
+	PublishChannel <- *msgReply
 }

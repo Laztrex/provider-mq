@@ -5,7 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 	stdlog "log"
 	"os"
-	"provider-mq/internal/consts"
+	"provider_mq/internal/consts"
 	"time"
 
 	"github.com/gin-gonic/gin"

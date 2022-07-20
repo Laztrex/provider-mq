@@ -4,18 +4,20 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"os"
-	"provider-mq/internal/consts"
-	"strconv"
-	"time"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+	"os"
+	"provider_mq/internal/consts"
+	"strconv"
+	"time"
 )
 
 type Config struct {
-	QueueName string `yaml:"queueName"`
-	ReplyTo   string `yaml:"replyTo"`
+	QueueName  string `yaml:"queueName"`
+	ReplyTo    string `yaml:"replyTo"`
+	Topic      string `yaml:"topic" default:""`
+	BindingKey string `yaml:"bindingKey" default:""`
 }
 
 func init() {
@@ -40,14 +42,21 @@ func GetQueueConf() []Config {
 		log.Debug().Msgf("failed reading config file: %v\n", err)
 
 		configs = append(configs, Config{
-			QueueName: "ml360",
-			ReplyTo:   "response"})
+			QueueName:  "fib",
+			ReplyTo:    "response",
+			Topic:      "",
+			BindingKey: ""})
 
 	} else {
 		err = yaml.Unmarshal(source, &configs)
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		}
+	}
+
+	if len(configs) > 10 {
+		log.Error().Msgf("Please! Do not exceed 10 queues...")
+		configs = configs[:len(configs)-1]
 	}
 
 	fmt.Printf("config:\n%+v\n", configs)

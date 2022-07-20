@@ -2,8 +2,25 @@ package controllers
 
 import (
 	"github.com/rs/zerolog/log"
-	"provider-mq/internal/schemas"
+	"provider_mq/internal/schemas"
 )
+
+func (conn *RMQSpec) ConsumeDeclare() {
+	var err error
+
+	if conn.Exchange != "" {
+		err = conn.ExchangeDeclare()
+		conn.OnError(err, "Failed to declare exchange while publishing")
+	}
+
+	err = conn.QueueDeclare()
+	conn.OnError(err, "Failed to declare a queue while publishing")
+
+	if conn.Exchange != "" {
+		err = conn.QueueBind()
+		conn.OnError(err, "Failed to bind a queue while publishing")
+	}
+}
 
 func (conn *RMQSpec) ConsumeMessages() {
 
@@ -43,18 +60,16 @@ func (conn *RMQSpec) ConsumeMessages() {
 				RmqMessage: msg,
 			}
 
-			replyChannel := make(chan schemas.MessageRequest, 10)
-			ReplyChannels[msg.CorrelationId] = replyChannel
+			//replyChannel := make(chan schemas.MessageRequest, 10)
+			//ReplyChannels[msg.CorrelationId] = replyChannel
 
 			//err = msg.Ack(true)
 			//if err != nil {
 			//	log.Printf("ERROR: fail to ack: %s", err.Error())
 			//}
+
 			RequestChannel <- *msgRequest
 
-			//if rchan, ok := ReplyChannels[msgRequest.CorrelationId]; ok {
-			//	rchan <- *msgRply
-			//}
 		}
 	}
 }

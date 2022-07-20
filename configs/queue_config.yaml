@@ -1,4 +1,6 @@
-- queueName: fib
+- Topic: ML.MQ
+  bindingKey: predict.*
+  queueName: fib
   replyTo: "response"
 - queueName: metrics
   replyTo: "response"

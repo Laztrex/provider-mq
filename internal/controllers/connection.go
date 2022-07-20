@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
-	"provider-mq/internal/utils"
+	"provider_mq/internal/utils"
 )
 
 type RMQSpec struct {
@@ -35,7 +35,6 @@ func (conn *RMQSpec) Connect() error {
 	if err != nil {
 		return fmt.Errorf("error in creating rabbitmq connection with %s : %s", conn.ConnectionString, err.Error())
 	}
-	//defer connProducer.Connection.Close()
 
 	go func() {
 		<-conn.Connection.NotifyClose(make(chan *amqp.Error)) //Listen to NotifyClose
@@ -46,7 +45,7 @@ func (conn *RMQSpec) Connect() error {
 	if err != nil {
 		return fmt.Errorf("failed to open a channel")
 	}
-	//defer connProducer.Channel.Close()
+
 	return nil
 }
 
@@ -61,7 +60,7 @@ func (conn *RMQSpec) ExchangeDeclare() error {
 		nil,           // arguments
 	)
 	if err != nil {
-		return fmt.Errorf("error in Exchange Declare: %s", err)
+		return fmt.Errorf("error in Exchange ConsumeDeclare: %s", err)
 	}
 
 	return nil
@@ -80,10 +79,10 @@ func (conn *RMQSpec) QueueDeclare() error {
 		return fmt.Errorf("error in declaring the queue %s", err)
 	}
 
-	err = conn.Channel.Qos(1, 0, false)
-	if err != nil {
-		return fmt.Errorf("error set qos %s", err)
-	}
+	//err = conn.Channel.Qos(1, 0, false)
+	//if err != nil {
+	//	return fmt.Errorf("error set qos %s", err)
+	//}
 
 	return nil
 }

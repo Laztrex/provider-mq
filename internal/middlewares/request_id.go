@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"provider-mq/internal/consts"
+	"provider_mq/internal/consts"
 )
 
 // RequestID Request ID middleware

@@ -18,3 +18,10 @@ type MessageCreate struct {
 	//RoutingKey    string
 	RmqMessage amqp.Delivery
 }
+
+// MessageReply is Response mapping queue
+type MessageReply struct {
+	CorrelationId string
+	Data          []byte
+	Headers       amqp.Table
+}
