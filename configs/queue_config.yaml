@@ -1,0 +1,4 @@
+- queueName: fib
+  replyTo: "response"
+- queueName: metrics
+  replyTo: "response"
