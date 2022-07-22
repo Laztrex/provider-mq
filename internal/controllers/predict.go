@@ -13,12 +13,6 @@ import (
 )
 
 func Predict() {
-	//var msg schemas.MessageRequest
-
-	//requestIdHeaderName := consts.RequestIdHttpHeaderName
-	//requestId := c.GetString(requestIdHeaderName)
-
-	// testing
 
 	for {
 		select {
@@ -26,20 +20,15 @@ func Predict() {
 
 			log.Printf("INFO: [%s] received", msgRequest.RmqMessage.CorrelationId)
 
-			//for k := range msgRequest.Headers {
-			//	if str, ok := msgRequest.Headers[k].(string); ok {
-			//		router.Header().Set(k, str)
-			//	}
-			//}
-
-			//Encode the data
-			//postBody, _ := json.Marshal(map[string]string{
-			//	"name":  "Toby",
-			//	"email": "Toby@example.com",
-			//})
-			//msgToModel := bytes.NewBuffer(postBody)
-
-			waitReplyModel(msgRequest.RmqMessage.Body, msgRequest.RmqMessage) // answer =
+			go func(msg schemas.MessageCreate) {
+				err := waitReplyModel(msg.RmqMessage)
+				if err != nil {
+					err := msg.RmqMessage.Nack(false, false)
+					if err != nil {
+						log.Error().Err(err).Msg("Failed Nack msg")
+					}
+				}
+			}(msgRequest)
 
 			// PublishChannel <- *msgRequest
 			// add case <- channel to Errors form http
@@ -48,12 +37,12 @@ func Predict() {
 	}
 }
 
-func waitReplyModel(msgToModel []byte, msg amqp.Delivery) {
+func waitReplyModel(msg amqp.Delivery) error {
 
 	req, err := http.NewRequest(
 		"POST",
 		fmt.Sprint("http://"+consts.HostModel+":"+consts.PortModel+consts.BasePath),
-		bytes.NewBuffer(msgToModel),
+		bytes.NewBuffer(msg.Body),
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed create request")
@@ -71,12 +60,13 @@ func waitReplyModel(msgToModel []byte, msg amqp.Delivery) {
 	fmt.Print(resp)
 	defer resp.Body.Close()
 
-	//msg.Ack(true)
 	if err, ok := err.(net.Error); ok && err.Timeout() {
-		log.Error().Err(err).Msg("Timeout on send message to <Model Application>")
-	} else if err != nil {
-		log.Error().Err(err).Msg("Error on send message to <Model Application>")
-		msg.Nack(true, false)
+		log.Info().Msg("Timeout on send message to <Model Application>")
+		//err := msg.Nack(false, false)
+
+		if err != nil {
+			return fmt.Errorf("timeout on send message to <Model Application> %s", err)
+		}
 	}
 
 	response, err := ioutil.ReadAll(resp.Body)
@@ -106,4 +96,6 @@ func waitReplyModel(msgToModel []byte, msg amqp.Delivery) {
 	}
 
 	PublishChannel <- *msgReply
+
+	return nil
 }

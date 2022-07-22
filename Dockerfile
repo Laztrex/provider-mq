@@ -1,6 +1,6 @@
 FROM golang:latest
 
-ENV APP_NAME controller_mq
+ENV APP_NAME provider_mq
 
 COPY . /go/src/${APP_NAME}
 WORKDIR /go/src/${APP_NAME}

@@ -1,6 +1,12 @@
-- Topic: ML.MQ
-  bindingKey: predict.*
+- topic: ML.MQ
   queueName: fib
+  bindingKey: "predict.*"
   replyTo: "response"
-- queueName: metrics
+  dle: true
+  argQueue: {
+    "x-dead-letter-exchange": dead_letter_exchange,
+  }
+- topic: ML.MQ
+  queueName: manage
+  bindingKey: "metrics.*"
   replyTo: "response"

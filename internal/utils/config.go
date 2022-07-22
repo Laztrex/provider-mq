@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/streadway/amqp"
 	"gopkg.in/yaml.v2"
 	"os"
 	"provider_mq/internal/consts"
@@ -14,10 +15,12 @@ import (
 )
 
 type Config struct {
-	QueueName  string `yaml:"queueName"`
-	ReplyTo    string `yaml:"replyTo"`
-	Topic      string `yaml:"topic" default:""`
-	BindingKey string `yaml:"bindingKey" default:""`
+	QueueName  string     `yaml:"queueName"`
+	ReplyTo    string     `yaml:"replyTo"`
+	Topic      string     `yaml:"topic" default:""`
+	BindingKey string     `yaml:"bindingKey" default:""`
+	DLE        bool       `yaml:"dle" default:"false"`
+	ArgsQueue  amqp.Table `yaml:"argQueue"`
 }
 
 func init() {
