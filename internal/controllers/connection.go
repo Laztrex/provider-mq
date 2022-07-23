@@ -32,7 +32,7 @@ func (conn RMQSpec) OnError(err error, msg string) {
 	}
 }
 
-func (conn *RMQSpec) Connect() error {
+func (conn *RMQSpec) Connect() error { //openChannel bool
 	var err error
 
 	tlsConf := utils.GetTlsConf()
@@ -47,6 +47,12 @@ func (conn *RMQSpec) Connect() error {
 		conn.Err <- errors.New("connection Closed")
 	}()
 
+	//if openChannel == true {
+	//	conn.Channel, err = conn.Connection.Channel()
+	//	if err != nil {
+	//		return fmt.Errorf("failed to open a channel")
+	//	}
+	//}
 	conn.Channel, err = conn.Connection.Channel()
 	if err != nil {
 		return fmt.Errorf("failed to open a channel")
@@ -106,6 +112,47 @@ func (conn *RMQSpec) QueueBind() error {
 	}
 
 	return nil
+}
+
+func (conn *RMQSpec) SetDLE() {
+	err := conn.Channel.ExchangeDeclare(
+		"dead_letter_exchange", // name
+		"fanout",               // type
+		true,                   // durable
+		false,                  // auto-deleted
+		false,                  // internal
+		false,                  // no-wait
+		nil,
+	)
+	if err != nil {
+		fmt.Printf("error in ExchangeDeclare: %s", err)
+	}
+
+	_, err = conn.Channel.QueueDeclare(
+		"dead_letter_queue", // name
+		false,               // durable
+		false,               // delete when unused
+		false,               // exclusive
+		false,               // no-wait
+		amqp.Table{
+			"x-message-ttl":          60000,
+			"x-dead-letter-exchange": "ML.MQ",
+		},
+	)
+	if err != nil {
+		fmt.Printf("error in ConsumeDeclare: %s", err)
+	}
+
+	err = conn.Channel.QueueBind(
+		"dead_letter_queue",    // name of the queue
+		"",                     // binding key
+		"dead_letter_exchange", // source exchange
+		false,                  // noWait
+		nil,                    // arguments
+	)
+	if err != nil {
+		fmt.Printf("error in BindQueue: %s", err)
+	}
 }
 
 //Reconnect reconnects the connection

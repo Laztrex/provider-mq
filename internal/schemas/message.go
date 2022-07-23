@@ -12,16 +12,20 @@ type MessageRequest struct {
 }
 
 type MessageCreate struct {
-	//CorrelationId string
-	//Body          []byte
-	//Headers       amqp.Table
-	//RoutingKey    string
 	RmqMessage amqp.Delivery
 }
 
-// MessageReply is Response mapping queue
-type MessageReply struct {
+// MessageReplySuccess is Response mapping queue
+type MessageReplySuccess struct {
+	MsgMq         amqp.Delivery
 	CorrelationId string
 	Data          []byte
 	Headers       amqp.Table
+}
+
+// MessageReplyError is Response if error request to Model
+type MessageReplyError struct {
+	MsgMq  amqp.Delivery
+	Error  error
+	DLECnt int
 }

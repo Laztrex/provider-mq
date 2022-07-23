@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/rs/zerolog/log"
-	"github.com/streadway/amqp"
-
-	//"provider_mq/internal/app"
-	"provider_mq/internal/controllers"
-	"provider_mq/internal/utils"
 	"sync"
+
+	"provider_mq/internal/controllers"
+	"provider_mq/internal/service"
+	"provider_mq/internal/utils"
 )
 
 func main() {
@@ -52,46 +50,8 @@ func main() {
 		}
 
 		if conf.DLE == true {
-			err = rmqConsumer.Channel.ExchangeDeclare(
-				"dead_letter_exchange", // name
-				"fanout",               // type
-				true,                   // durable
-				false,                  // auto-deleted
-				false,                  // internal
-				false,                  // no-wait
-				nil,
-			)
-			if err != nil {
-				fmt.Printf("error in ExchangeDeclare: %s", err)
-			}
-
-			_, err = rmqConsumer.Channel.QueueDeclare(
-				"dead_letter_queue", // name
-				false,               // durable
-				false,               // delete when unused
-				false,               // exclusive
-				false,               // no-wait
-				amqp.Table{
-					"x-message-ttl":          60000,
-					"x-dead-letter-exchange": "ML.MQ",
-				},
-			)
-			if err != nil {
-				fmt.Printf("error in ConsumeDeclare: %s", err)
-			}
-
-			err = rmqConsumer.Channel.QueueBind(
-				"dead_letter_queue",    // name of the queue
-				"",                     // binding key
-				"dead_letter_exchange", // source exchange
-				false,                  // noWait
-				nil,                    // arguments
-			)
-			if err != nil {
-				fmt.Printf("error in BindQueue: %s", err)
-			}
+			rmqConsumer.SetDLE()
 		}
-
 		rmqConsumer.ConsumeDeclare()
 		rmqProducer.ProduceDeclare()
 
@@ -107,8 +67,7 @@ func main() {
 
 	}
 
-	go controllers.Predict()
+	go service.Predict()
 
 	wg.Wait()
-
 }
