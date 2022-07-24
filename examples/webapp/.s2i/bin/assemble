@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "Upgrading pip installation..."
+
+pip install --no-cache-dir grpc-interceptor==0.12.0 grpcio==1.34.0 grpcio-tools==1.33.2 prometheus-client==0.9.0 \
+
+echo "Running default build..."
+${STI_SCRIPTS_PATH}/assemble

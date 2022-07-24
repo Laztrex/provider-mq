@@ -1,0 +1,53 @@
+server:
+  uvicorn:
+    host: {{ env('HOST', "0.0.0.0") }}
+    port: {{ env('PORT', 8080) }}
+    reload: True
+    workers: {{ env('MODEL_HTTP_SERVER_MAX_WORKERS', 4) }}
+  hypercorn:
+    bind: {{ env('BIND', "0.0.0.0:8080") }}
+
+  grace_period: {{ env('MODEL_GRACE_PERIOD', 30) | int - 5 }}
+
+framework:
+  background_tasks: {{ env('BACKGROUND', True) }}
+  name: "{{ framework_metadata.get('__title__', '') }}"
+  workers:
+    http:
+      max_workers: {{ env('HTTP_PROCESS_MAX_WORKERS', 3) }}
+      timeout: {{ env('TIMEOUT', 90) }}
+      initializer:
+        path: model.initial
+        name: initializer_for_model  # initializer_for_model
+      initargs: [0, ]
+  version: "{{ framework_metadata.get('__version__', '') }}"
+
+cluster:
+  name: "{{ env('CLUSTER_NAME', '') }}"
+
+project:
+  name: "{{ env('PROJECT_NAME', '') }}"
+
+application:
+  name: "{{ env('APPLICATION_NAME', '') }}"
+  provider_kafka_name: "{{ env('APPLICATION_CONTROLLER_KAFKA_NAME', 'provider-kafka') }}"
+
+model:
+  id: "{{ model_metadata.get('__id__', '') }}"
+  name: "{{ model_metadata.get('__name__', '') }}"
+  title: "{{ model_metadata.get('__title__', '') }}"
+  type: "{{ model_metadata.get('__type__', '') }}"
+  version: "{{ model_metadata.get('__version__', '') }}"
+
+amqp:
+  host: "{{ env('RMQ_HOST', 'rabbitmq') }}"
+  port: {{ env('RMQ_PORT', 5671) }}
+  user: "{{ env('MQ_USER', 'MLUser') }}"
+  password: "{{ env('MQ_PASS', 'MLPass') }}"
+
+  consumeQueue: "{{ env('QUEUE_NAME', 'predict') }}"
+
+  tls:
+    cafile: "{{ env('CAFILE', '/certs/webapp/cacert.pem') }}"
+    certfile: "{{ env('CERTFILE', '/certs/webapp/client_cert.pem') }}"
+    keyfile: "{{ env('CERTKEY', '/certs/webapp/client_key.pem') }}"

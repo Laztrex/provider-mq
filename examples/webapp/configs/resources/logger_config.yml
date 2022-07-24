@@ -1,0 +1,52 @@
+version: 1
+
+disable_existing_loggers: {{ disable_exist }}
+
+formatters:
+    simple_formatter:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+filters:
+  context_filter:
+    (): framework.server.contexts.thread_context.ThreadContextFilter
+    filter_keys: [ 'request_id' ]
+  healthcheck_filter:
+    (): configs.logger_config_loader.HealthCheckFilter
+
+handlers:
+  console_handler:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple_formatter
+    stream: ext://sys.stdout
+    filters: [context_filter, ]
+  file_handler:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: simple_formatter
+    filename: {{ env('LOG_PATH', '.') }}/app.log
+    filters: [context_filter]
+  metric_file_handler:
+    class: logging.FileHandler
+    level: INFO
+    formatter: simple_formatter
+    filename: {{ env('LOG_PATH', '.') }}/app-metrics.log
+    filters: [ context_filter ]
+
+root:
+  level: {{ env('LOG_LEVEL', 'INFO') }}
+  handlers: [ console_handler, file_handler ]
+
+loggers:
+  metric:
+    handlers: [ metric_file_handler ]
+    propagate: no
+  uvicorn:
+    handlers: [ console_handler ]
+    propagate: no
+  uvicorn.access:
+    handlers: [ console_handler ]
+    propagate: no
+  uvicorn.error:
+    handlers: [ console_handler ]
+    propagate: no

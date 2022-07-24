@@ -19,6 +19,7 @@ type Config struct {
 	ReplyTo    string     `yaml:"replyTo"`
 	Topic      string     `yaml:"topic" default:""`
 	BindingKey string     `yaml:"bindingKey" default:""`
+	RoutingKey string     `yaml:"routingKey" default:""`
 	DLE        bool       `yaml:"dle" default:"false"`
 	ArgsQueue  amqp.Table `yaml:"argQueue"`
 }

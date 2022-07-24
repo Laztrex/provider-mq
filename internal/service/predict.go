@@ -50,9 +50,10 @@ func waitReplyModel(msg amqp.Delivery) {
 		}
 	}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: consts.RestTimeout * time.Second}
 
 	resp, err := client.Do(req)
+
 	if err, ok := err.(net.Error); ok && err.Timeout() {
 		log.Error().Err(err).Msgf("Timeout on send message to <Model Application>: %s", err.Error())
 		msgReply := &schemas.MessageReplyError{

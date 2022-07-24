@@ -32,7 +32,7 @@ func (conn RMQSpec) OnError(err error, msg string) {
 	}
 }
 
-func (conn *RMQSpec) Connect() error { //openChannel bool
+func (conn *RMQSpec) GetConnect() error {
 	var err error
 
 	tlsConf := utils.GetTlsConf()
@@ -47,18 +47,17 @@ func (conn *RMQSpec) Connect() error { //openChannel bool
 		conn.Err <- errors.New("connection Closed")
 	}()
 
-	//if openChannel == true {
-	//	conn.Channel, err = conn.Connection.Channel()
-	//	if err != nil {
-	//		return fmt.Errorf("failed to open a channel")
-	//	}
-	//}
+	return nil
+}
+
+func (conn *RMQSpec) GetChannel() {
+	var err error
+
 	conn.Channel, err = conn.Connection.Channel()
 	if err != nil {
-		return fmt.Errorf("failed to open a channel")
+		conn.OnError(err, "Failed to connect to RabbitMQ")
+		panic(err)
 	}
-
-	return nil
 }
 
 func (conn *RMQSpec) ExchangeDeclare() error {
@@ -158,13 +157,13 @@ func (conn *RMQSpec) SetDLE() {
 //Reconnect reconnects the connection
 func (conn *RMQSpec) Reconnect() error {
 
-	if err := conn.Connect(); err != nil {
+	if err := conn.GetConnect(); err != nil {
 		return err
 	}
-	log.Printf("INFO: channel reconnection: %s", conn.ConnectionString)
-	//if err := connProducer.BindQueue(); err != nil {
-	//	return err
-	//}
+	log.Printf("INFO: reconnection success: %s", conn.ConnectionString)
+
+	conn.GetChannel()
+	log.Printf("INFO: reopened channel success: %s", conn.ConnectionString)
 
 	return nil
 }

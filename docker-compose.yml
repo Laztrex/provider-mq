@@ -1,0 +1,70 @@
+version: '3.6'
+
+networks:
+  rabbitmq-example:
+    driver: bridge
+
+services:
+
+  rabbitmq:
+    build: examples/rabbit-mq
+    container_name: rabbitmq
+    networks:
+      - rabbitmq-example
+    volumes:
+      - "./examples/rabbit-mq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - "./examples/certs/rabbitmq:/certs/rabbitmq:ro"
+    ports:
+      - "127.0.0.1:8008:15672"  # UI
+      - "5673:5673"
+      - "5671:5671"  # For TLS
+      - "127.0.0.1:15692:15692"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"] # test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  provider_mq:
+    build: .
+    container_name: provider-mq
+    networks:
+      - rabbitmq-example
+    depends_on:
+      - rabbitmq
+    restart: on-failure
+    environment: # Sample env variables for gateway_mq
+      LOG_LEVEL: "debug"
+
+      RMQ_URL: "amqps://superuser:superpassword@rabbitmq:5671/"  # "amqps://user:pass@rabbitmq:5671/"
+      MQ_CACERT: "/certs/gateway_mq/cacert_mq.pem"
+      MQ_CERT: "/certs/gateway_mq/client_cert_mq.pem"
+      MQ_KEY: "/certs/gateway_mq/client_key_mq.pem"
+
+    volumes:
+      - "./gateway_mq/examples/certs/gateway_mq:/certs/gateway_mq:ro"
+
+  webapp:
+    build: examples/webapp
+    container_name: model-app
+    networks:
+      - rabbitmq-example
+    depends_on:
+      - rabbitmq
+      - controller_mq
+    working_dir: /webapp
+    restart: on-failure
+    ports:
+      - "0.0.0.0:8080:8080"
+    volumes:
+      - ${PWD}/tests:/tests
+      - ./:/framework
+      - "./gateway_mq/examples/certs/webapp:/certs/webapp:ro"
+    environment: # Sample env variables for consumer
+      #      LOG_LEVEL: "debug"
+      CAFILE: "/certs/webapp/cacert.pem"
+      CERTFILE: "/certs/webapp/client_cert.pem"
+      CERTKEY: "/certs/webapp/client_key.pem"
+      LOG_PATH: /tests
+
+      QUEUE_NAME: fib

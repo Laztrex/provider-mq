@@ -45,7 +45,9 @@ func (conn *RMQSpec) ProduceMessage() {
 				log.Err(err).Msgf("ERROR: fail to publish msg: %s", msg.CorrelationId)
 			}
 			log.Printf("INFO: [%v] - published", msg.CorrelationId)
+
 		case errCh := <-DLEChannel:
+
 			err := errCh.MsgMq.Nack(false, false)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed Nack msg")

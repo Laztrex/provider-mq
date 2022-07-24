@@ -25,13 +25,13 @@ func main() {
 		Err:              make(chan error),
 	}
 
-	err := rmqConsumer.Connect()
+	err := rmqConsumer.GetConnect()
 	if err != nil {
 		rmqConsumer.OnError(err, "Failed to connect to RabbitMQ")
 		panic(err)
 	}
 
-	err = rmqProducer.Connect()
+	err = rmqProducer.GetConnect()
 	if err != nil {
 		rmqProducer.OnError(err, "Failed to connect to RabbitMQ")
 		panic(err)
@@ -39,6 +39,9 @@ func main() {
 
 	wg.Add(len(configs) + 1)
 	for _, conf := range configs {
+
+		rmqConsumer.GetChannel()
+		rmqProducer.GetChannel()
 
 		rmqConsumer.Queue = conf.QueueName
 		rmqConsumer.Exchange = conf.Topic
@@ -52,6 +55,7 @@ func main() {
 		if conf.DLE == true {
 			rmqConsumer.SetDLE()
 		}
+
 		rmqConsumer.ConsumeDeclare()
 		rmqProducer.ProduceDeclare()
 
@@ -70,4 +74,5 @@ func main() {
 	go service.Predict()
 
 	wg.Wait()
+
 }

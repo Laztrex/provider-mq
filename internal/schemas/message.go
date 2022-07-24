@@ -4,13 +4,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// MessageRequest Message is RequestBody from Client
-type MessageRequest struct {
-	CorrelationId string
-	Data          string `json:"data" binding:"required"`
-	Headers       amqp.Table
-}
-
 type MessageCreate struct {
 	RmqMessage amqp.Delivery
 }

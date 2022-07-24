@@ -50,23 +50,9 @@ func (conn *RMQSpec) ConsumeMessages() {
 			}
 			log.Info().Msgf("Receive body: %v", msg.Body)
 
-			//r := reflect.ValueOf(msg.Headers)
-			//requestId = reflect.Indirect(r).FieldByName(consts.RequestIdHttpHeaderName).String()
-			//if requestId == "" {
-			//	requestId = uuid.New().String()
-			//}
-
 			msgRequest := &schemas.MessageCreate{
 				RmqMessage: msg,
 			}
-
-			//replyChannel := make(chan schemas.MessageRequest, 10)
-			//ReplyChannels[msg.CorrelationId] = replyChannel
-
-			//err = msg.Ack(true)
-			//if err != nil {
-			//	log.Printf("ERROR: fail to ack: %s", err.Error())
-			//}
 
 			RequestChannel <- *msgRequest
 
