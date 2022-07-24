@@ -33,16 +33,16 @@ services:
     depends_on:
       - rabbitmq
     restart: on-failure
-    environment: # Sample env variables for gateway_mq
+    environment: # Sample env variables for provider_mq
       LOG_LEVEL: "debug"
 
       RMQ_URL: "amqps://superuser:superpassword@rabbitmq:5671/"  # "amqps://user:pass@rabbitmq:5671/"
-      MQ_CACERT: "/certs/gateway_mq/cacert_mq.pem"
-      MQ_CERT: "/certs/gateway_mq/client_cert_mq.pem"
-      MQ_KEY: "/certs/gateway_mq/client_key_mq.pem"
+      MQ_CACERT: "/certs/provider_mq/cacert_mq.pem"
+      MQ_CERT: "/certs/provider_mq/client_cert_mq.pem"
+      MQ_KEY: "/certs/provider_mq/client_key_mq.pem"
 
     volumes:
-      - "./gateway_mq/examples/certs/gateway_mq:/certs/gateway_mq:ro"
+      - "./examples/certs/provider_mq:/certs/provider_mq:ro"
 
   webapp:
     build: examples/webapp
@@ -51,17 +51,14 @@ services:
       - rabbitmq-example
     depends_on:
       - rabbitmq
-      - controller_mq
+      - provider_mq
     working_dir: /webapp
     restart: on-failure
-    ports:
-      - "0.0.0.0:8080:8080"
     volumes:
       - ${PWD}/tests:/tests
       - ./:/framework
-      - "./gateway_mq/examples/certs/webapp:/certs/webapp:ro"
-    environment: # Sample env variables for consumer
-      #      LOG_LEVEL: "debug"
+      - "./examples/certs/webapp:/certs/webapp:ro"
+    environment:
       CAFILE: "/certs/webapp/cacert.pem"
       CERTFILE: "/certs/webapp/client_cert.pem"
       CERTKEY: "/certs/webapp/client_key.pem"
