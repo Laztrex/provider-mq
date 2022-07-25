@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mlx-provider-mq
+  labels:
+    app: mlx
+spec:
+  ports:
+    - name: proxy
+      protocol: TCP
+      port: 5080
+      targetPort: 5080
+  selector:
+    deploy: mlx-provider-mq
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+status:
+  loadBalancer: {}

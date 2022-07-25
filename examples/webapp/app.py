@@ -15,6 +15,7 @@ from framework.server.app_server import (
 )
 from framework.server.app_worker import start_model
 from framework.interfaces.base.decorator import request_handler
+from framework.schemas.body import FibBody
 from framework.schemas.validation import Job
 
 from model import main
@@ -30,7 +31,7 @@ class Model(BaseModel):
 
     @request_handler
     async def predict(
-            self, item: Request,
+            self, item: FibBody,
             request_id: str = Header(''), content_type: str = Header(...)
     ) -> Union[dict, bytes]:
         """

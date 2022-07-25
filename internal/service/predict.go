@@ -2,21 +2,49 @@ package service
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"provider_mq/internal/app"
 	"provider_mq/internal/consts"
 	"provider_mq/internal/controllers"
+	"provider_mq/internal/middlewares"
 	"provider_mq/internal/schemas"
+	"provider_mq/internal/utils"
 	"time"
 )
+
+type HostConfig struct {
+	host     string
+	port     string
+	basePath string
+}
 
 func Predict() {
 
 	//errg := new(errgroup.Group)
+
+	go func() {
+		app.SetupApp()
+	}()
+
+	modelHost := utils.GetEnvVar("MODEL_HOST")
+	modelPort := utils.GetEnvVar("MODEL_PORT")
+	if modelHost == "" {
+		modelHost = consts.HostModel
+	}
+	if modelPort == "" {
+		modelPort = consts.PortModel
+	}
+	hostModel := &HostConfig{
+		host:     modelHost,
+		port:     modelPort,
+		basePath: consts.BasePath,
+	}
 
 	for {
 		select {
@@ -27,18 +55,27 @@ func Predict() {
 			msg := msgRequest
 
 			go func(msg schemas.MessageCreate) {
-				waitReplyModel(msg.RmqMessage)
+				hostModel.waitReplyModel(msg.RmqMessage)
 			}(msg)
 		}
 	}
 }
 
-func waitReplyModel(msg amqp.Delivery) {
+func (c *HostConfig) waitReplyModel(msg amqp.Delivery) {
+
+	newMsg := &schemas.MessageRest{
+		Data: string(msg.Body),
+	}
+
+	newData, err := json.Marshal(*newMsg)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed parse json body")
+	}
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprint("http://"+consts.HostModel+":"+consts.PortModel+consts.BasePath),
-		bytes.NewBuffer(msg.Body),
+		fmt.Sprint("http://"+c.host+":"+c.port+c.basePath),
+		bytes.NewBuffer(newData),
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed create request")
@@ -50,7 +87,10 @@ func waitReplyModel(msg amqp.Delivery) {
 		}
 	}
 
-	client := &http.Client{Timeout: consts.RestTimeout * time.Second}
+	client := &http.Client{
+		Timeout:   consts.RestTimeout * time.Second,
+		Transport: middlewares.LoggerTransportRoundTripper{Proxy: http.DefaultTransport},
+	}
 
 	resp, err := client.Do(req)
 

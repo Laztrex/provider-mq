@@ -52,12 +52,13 @@ class BaseModel(metaclass=ABCMeta):
         """Mapping parse-method request body"""
         return self._response_mapping[self._request_state]
 
-    def _base_request(self, data, *args, **kwargs):
+    def _base_request(self, data: str, *args, **kwargs):
         """
         Mock deserialize while use dataclass body in /schemas.
         Compatibility with decorator
         """
-        return literal_eval(data.decode('utf-8'))
+
+        return literal_eval(data)
 
     def _base_b64_request(self, data: bytes, content_type: str) -> dict:
         """Deserialize request data [http]"""

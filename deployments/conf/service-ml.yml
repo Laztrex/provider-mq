@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mlx-mlx
+  labels:
+    app: mlx
+spec:
+  ports:
+    - name: default
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    deploy: mlx-mlx
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+

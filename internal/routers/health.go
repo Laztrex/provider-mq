@@ -1,13 +1,14 @@
 package routers
 
 import (
+	"github.com/rs/zerolog/log"
 	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
-func Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"running": "ok",
-	})
+func Health(w http.ResponseWriter, r *http.Request) {
+	_, err := w.Write([]byte(`{"status":"OK"}`))
+	w.WriteHeader(http.StatusOK)
+	if err != nil {
+		log.Error().Err(err).Msg("can't send a reply in Health method")
+	}
 }

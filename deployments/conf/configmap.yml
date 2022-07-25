@@ -1,0 +1,41 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: rabbitmq-config
+data:
+  enabled_plugins: |
+    [rabbitmq_peer_discovery_k8s, rabbitmq_management, rabbitmq_prometheus].
+  rabbitmq.conf: >
+    cluster_formation.peer_discovery_backend = rabbit_peer_discovery_k8s
+
+    cluster_formation.k8s.host = kubernetes.default.svc.cluster.local
+
+    cluster_formation.k8s.port = 443
+
+    cluster_formation.k8s.address_type = hostname
+
+    # cluster_formation.k8s.address_type = ip
+
+    cluster_formation.k8s.service_name = rabbitmq-headless
+
+    cluster_formation.k8s.hostname_suffix = hostname
+
+    cluster_formation.node_cleanup.interval = 10
+
+    cluster_formation.node_cleanup.only_log_warning = true
+
+    cluster_partition_handling = autoheal
+
+    listeners.tcp.default = 5672
+
+    listeners.ssl.default = 5671
+
+    queue_master_locator=min-masters
+
+    ssl_options.cacertfile = /opt/ssl/certs/trusted_crt.pem
+
+    ssl_options.certfile = /opt/ssl/certs/crt.pem
+
+    ssl_options.keyfile = /opt/ssl/certs/key.pem
+  rabbitmq.properties: |
+    RABBITMQ_MNESIA_DIR=/data

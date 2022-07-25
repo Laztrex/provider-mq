@@ -8,6 +8,10 @@ type MessageCreate struct {
 	RmqMessage amqp.Delivery
 }
 
+type MessageRest struct {
+	Data string `json:"data"`
+}
+
 // MessageReplySuccess is Response mapping queue
 type MessageReplySuccess struct {
 	MsgMq         amqp.Delivery

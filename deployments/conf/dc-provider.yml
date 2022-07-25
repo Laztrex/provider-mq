@@ -1,0 +1,163 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: provider-mq-template
+objects:
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: provider-mq
+      labels:
+        app: mlx
+        deploy: mlx-provider-mq
+    spec:
+      strategy:
+        type: Rolling
+        rollingParams:
+          updatePeriodSeconds: 1
+          intervalSeconds: 1
+          timeoutSeconds: 3600
+          maxUnavailable: 25%
+          maxSurge: 25%
+        resources: {}
+        activeDeadlineSeconds: 21600
+      triggers:
+        - type: ConfigChange
+      replicas: 1
+      revisionHistoryLimit: 10
+      test: false
+      selector:
+        deploy: mlx-provider-mq
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deploy: mlx-provider-mq
+        spec:
+          volumes:
+            - name: ml-log
+              emptyDir: {}
+            - name: tmp-dir
+              emptyDir: {}
+            - name: queue-config
+              configMap:
+                name: queue-config
+                items:
+                  - key: queue_config.yaml
+                    path: queue_config.yaml
+                defaultMode: 420
+                optional: false
+            - name: provider-gateway-mq-certs
+              secret:
+                secretName: provider-gateway-mq-certs
+                items:
+                  - key: crt.pem
+                    path: client_cert_mq.pem
+                  - key: key.pem
+                    path: client_key_mq.pem
+                  - key: cacert_mq.pem
+                    path: cacert_mq.pem
+                  - key: server_cert.pem
+                    path: server_cert.pem
+                  - key: server_key.pem
+                    path: server_key.pem
+                  - key: trusted_crt.pem
+                    path: trusted_crt.pem
+                defaultMode: 288
+            - name: gin-certs
+              secret:
+                secretName: gin-certs
+                items:
+                  - key: crt.pem
+                    path: server_cert.pem
+                  - key: key.pem
+                    path: server_key.pem
+                  - key: trusted_crt.pem
+                    path: trusted_crt.pem
+                defaultMode: 288
+          containers:
+            - resources:
+                limits:
+                  cpu: '2'
+                  memory: 3000Mi
+                requests:
+                  cpu: '1'
+                  memory: 2000Mi
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: 5080
+                  scheme: HTTP
+                initialDelaySeconds: 5
+                timeoutSeconds: 1
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+              terminationMessagePath: /dev/termination-log
+              name: provider-mq
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 5080
+                  scheme: HTTP
+                initialDelaySeconds: 300
+                timeoutSeconds: 1
+                periodSeconds: 60
+                successThreshold: 1
+                failureThreshold: 10
+              env:
+                - name: APPLICATION_NAME
+                  value: provider-mq
+                - name: PROJECT_NAME
+                  value: testing
+                - name: LOG_LEVEL
+                  value: debug
+                - name: MQ_ADMIN_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: rabbitmq-admin
+                      key: user
+                - name: MQ_ADMIN_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: rabbitmq-admin
+                      key: pass
+                - name: RMQ_URL
+                  # amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@rabbitmq-headless.$(PROJECT_NAME).svc.cluster.local:5671/
+                  value: >-
+                    amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@${RMQ_HOST}:${RMQ_PORT}/
+              securityContext:
+                readOnlyRootFilesystem: false
+              imagePullPolicy: Always
+              ports:
+                - name: mq
+                  containerPort: 8080
+                  protocol: TCP
+              volumeMounts:
+                - name: ml-log
+                  mountPath: /var/log
+                - name: tmp-dir
+                  mountPath: /tmp/nginx
+                - name: provider-gateway-mq-certs
+                  readOnly: true
+                  mountPath: /certs/gateway_mq
+                - name: queue-config
+                  mountPath: /go/src/provider_mq/configs/queue_config.yaml
+                  subPath: queue_config.yaml
+              terminationMessagePolicy: File
+              image: >-
+                ${IMAGE_PROVIDER_MQ}
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          automountServiceAccountToken: false
+          securityContext: {}
+          schedulerName: default-scheduler
+
+parameters:
+  - name: IMAGE_PROVIDER_MQ
+    required: true
+  - name: RMQ_HOST
+    required: true
+  - name: RMQ_PORT
+    required: true

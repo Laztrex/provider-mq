@@ -1,0 +1,17 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: mlx-mq
+  labels:
+    shard: default
+spec:
+  host: mlx.hostname
+  to:
+    kind: Service
+    name: mlx-provider-mq
+    weight: 100
+  port:
+    targetPort: proxy
+  tls:
+    termination: passthrough
+  wildcardPolicy: None

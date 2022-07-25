@@ -1,0 +1,159 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: mlx-template
+objects:
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: ${NAME_PROJECT}-${NAME_MODEL}
+      labels:
+        app: ${NAME_PROJECT}
+    spec:
+      strategy:
+        type: Rolling
+        rollingParams:
+          updatePeriodSeconds: 1
+          intervalSeconds: 1
+          timeoutSeconds: 3600
+          maxUnavailable: 25%
+          maxSurge: 25%
+        resources: { }
+        activeDeadlineSeconds: 21600
+      triggers:
+        - type: ConfigChange
+      replicas: 1
+      revisionHistoryLimit: 10
+      test: false
+      selector:
+        deploy: ${NAME_PROJECT}-${NAME_MODEL}
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deploy: ${NAME_PROJECT}-${NAME_MODEL}
+        spec:
+          nodeSelector:
+            type: worker
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+          securityContext: { }
+          containers:
+            - resources:
+                limits:
+                  cpu: '2'
+                  memory: 2000Mi
+                requests:
+                  cpu: '1'
+                  memory: 1000Mi
+              readinessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 10
+                timeoutSeconds: 1
+                periodSeconds: 500
+                successThreshold: 1
+                failureThreshold: 5
+              terminationMessagePath: /dev/termination-log
+              name: model
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                  scheme: HTTP
+                timeoutSeconds: 1
+                periodSeconds: 500
+                successThreshold: 1
+                failureThreshold: 5
+              env:
+                - name: MODEL_PORT
+                  value: '8080'
+                - name: MODEL_GRPC_PORT
+                  value: '-1'
+                - name: MODEL_GRACE_PERIOD
+                  value: '30'
+                - name: MODEL_HTTP_SERVER_MAX_WORKERS
+                  value: '10'
+                - name: MODEL_GRPC_SERVER_MAX_WORKERS
+                  value: '10'
+                - name: LOG_PATH
+                  value: /var/log
+                - name: MODEL_DESCRIPTION
+                  value: Model mlx
+                - name: PROJECT_NAME
+                  value: test
+                - name: MODEL_MQ_CLIENT_SSL_CERT_FILE
+                  value: /opt/model/security/mq/ssl/crt.pem
+                - name: MODEL_MQ_CLIENT_SSL_CERT_KEY_FILE
+                  value: /opt/model/security/mq/ssl/key.pem
+                - name: MODEL_MQ_CLIENT_SSL_CA_CERT_FILE
+                  value: /opt/model/security/mq/ssl/trusted_crt.pem
+                - name: RMQ_HOST
+                  value: ${RMQ_HOST}
+                - name: MQ_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: rabbitmq-user
+                      key: user
+                - name: MQ_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: rabbitmq-user
+                      key: pass
+                - name: QUEUE_NAME
+                  value: fib
+              securityContext:
+                readOnlyRootFilesystem: false
+              ports:
+                - name: model
+                  containerPort: 8080
+                  protocol: TCP
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: ml-log
+                  mountPath: /var/log
+                - name: tmp-dir
+                  mountPath: /tmp
+                - name: mq-certs
+                  readOnly: true
+                  mountPath: /opt/model/security/mq/ssl
+              terminationMessagePolicy: File
+              image: >-
+                ${IMAGE_MODEL}
+          automountServiceAccountToken: false
+          volumes:
+            - name: ml-log
+              emptyDir: { }
+            - name: tmp-dir
+              emptyDir: { }
+            - name: init-volume
+              projected:
+                sources:
+                  - configMap:
+                      name: ml-init-containers
+                defaultMode: 288
+            - name: mq-certs
+              secret:
+                secretName: mlx-rabbitmq-mq-certs
+                items:
+                  - key: crt
+                    path: crt.pem
+                  - key: key
+                    path: key.pem
+                  - key: trusted_crt
+                    path: trusted_crt.pem
+                defaultMode: 288
+          dnsPolicy: ClusterFirst
+
+parameters:
+  - name: IMAGE_MODEL
+    required: true
+  - name: RMQ_HOST
+    required: true
+  - name: NAME_PROJECT
+    required: true
+  - name: NAME_MODEL
+    required: true

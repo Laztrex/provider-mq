@@ -5,10 +5,10 @@ const EnvFileDirectory = "."
 
 const QueuesConf = "configs/queue_config.yaml"
 
-const HostModel = "webapp"
+const HostModel = "localhost"
 const PortModel = "8080"
 const BasePath = "/predict"
-const RequestIdHttpHeaderName = "RqUID"
+const RequestIdHttpHeaderName = "request-id"
 
 const RestTimeout = 300
 

@@ -1,0 +1,37 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: rabbitmq-headless
+  labels:
+    app: mlx
+spec:
+  ports:
+    - name: epmd
+      protocol: TCP
+      port: 4369
+      targetPort: 4369
+    - name: amqps
+      protocol: TCP
+      port: 5671
+      targetPort: 5671
+    - name: amqp
+      protocol: TCP
+      port: 5672
+      targetPort: 5672
+    - name: cluster-rpc
+      protocol: TCP
+      port: 25672
+      targetPort: 25672
+  selector:
+    deploy: mlx-rabbitmq
+    name: mlx-rabbitmq
+  clusterIP: None
+  clusterIPs:
+    - None
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+status:
+  loadBalancer: {}

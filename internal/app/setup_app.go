@@ -1,34 +1,27 @@
-//go:build exclude
-
 package app
 
 import (
-	"github.com/gin-gonic/gin"
+	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
-
-	"provider_mq/internal/middlewares"
+	"net/http"
 	"provider_mq/internal/routers"
 )
 
 // SetupApp Function to setup the app object
-func SetupApp() *gin.Engine {
+func SetupApp() *http.ServeMux {
 	log.Info().Msg("Initializing service")
 
-	// Create barebone engine
-	app := gin.New()
-	// Add default recovery middleware
-	app.Use(gin.Recovery())
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", routers.Health)
 
-	// disabling the trusted proxy feature
-	app.SetTrustedProxies(nil)
+	err := http.ListenAndServe(":5051", mux)
+	if err != nil {
+		if !errors.Is(err, http.ErrServerClosed) {
+			fmt.Printf("error running http server: %s\n", err)
+		}
+	}
 
-	// Add cors, request ID and request logging middleware
-	log.Info().Msg("Adding cors, request id and request logging middleware")
-	app.Use(middlewares.RequestID(), middlewares.RequestLogger())
+	return mux
 
-	// Setup routers
-	log.Info().Msg("Setting up routers")
-	routers.SetupRouters(app)
-
-	return app
 }

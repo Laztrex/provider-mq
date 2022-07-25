@@ -1,0 +1,149 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: mlx-template
+objects:
+  - apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: mlx-rabbitmq
+      labels:
+        app: mlx
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: mlx-rabbitmq
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            deploy: mlx-rabbitmq
+            name: mlx-rabbitmq
+        spec:
+          restartPolicy: Always
+          serviceAccountName: rabbitmq
+          priority: 0
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+          securityContext: {}
+          containers:
+            - resources:
+                limits:
+                  cpu: '1'
+                  memory: 2Gi
+                requests:
+                  cpu: '1'
+                  memory: 1Gi
+              readinessProbe:
+                exec:
+                  command:
+                    - rabbitmqctl
+                    - status
+                initialDelaySeconds: 10
+                timeoutSeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+              terminationMessagePath: /dev/termination-log
+              name: rabbitmq-client
+              livenessProbe:
+                exec:
+                  command:
+                    - rabbitmqctl
+                    - status
+                initialDelaySeconds: 30
+                timeoutSeconds: 10
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+              env:
+                - name: MY_POD_IP
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: status.podIP
+                - name: HOSTNAME
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: metadata.name
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: metadata.namespace
+                - name: K8S_SERVICE_NAME
+                  value: rabbitmq-headless
+                - name: RABBITMQ_USE_LONGNAME
+                  value: 'true'
+                - name: RABBITMQ_NODENAME
+                  value: >-
+                    rabbit@$(HOSTNAME).$(K8S_SERVICE_NAME).$(NAMESPACE).svc.cluster.local
+                - name: K8S_HOSTNAME_SUFFIX
+                  value: .$(K8S_SERVICE_NAME).$(NAMESPACE).svc.cluster.local
+              ports:
+                - containerPort: 5671
+                  protocol: TCP
+                - containerPort: 4369
+                  protocol: TCP
+                - containerPort: 5672
+                  protocol: TCP
+                - containerPort: 15672
+                  protocol: TCP
+                - containerPort: 25672
+                  protocol: TCP
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - name: rabbitmq-config
+                  mountPath: /etc/rabbitmq
+                - name: rabbitmq-certs-vols
+                  readOnly: true
+                  mountPath: /opt/ssl/certs
+                  # PVC
+#                - name: rabbitmq-data
+#                  mountPath: /var/lib/rabbitmq/mnesia
+              terminationMessagePolicy: File
+              image: >-
+                ${IMAGE_RABBITMQ}
+          automountServiceAccountToken: true
+          serviceAccount: rabbitmq
+          volumes:
+            - name: rabbitmq-config
+              configMap:
+                name: rabbitmq-config
+                items:
+                  - key: rabbitmq.conf
+                    path: rabbitmq.conf
+                  - key: enabled_plugins
+                    path: enabled_plugins
+                defaultMode: 420
+                optional: false
+            - name: rabbitmq-config-rw
+              emptyDir: {}
+            - name: rabbitmq-certs-vols
+              secret:
+                secretName: mlx-rabbitmq-mq-certs
+                items:
+                  - key: crt
+                    path: crt.pem
+                  - key: key
+                    path: key.pem
+                  - key: trusted_crt
+                    path: trusted_crt.pem
+                defaultMode: 288
+#            - name: rabbitmq-data
+#                persistentVolumeClaim:
+#                  claimName: rabbitmq-data
+          dnsPolicy: ClusterFirst
+      serviceName: rabbitmq-headless
+      podManagementPolicy: OrderedReady
+      updateStrategy:
+        type: RollingUpdate
+        rollingUpdate:
+          partition: 0
+      revisionHistoryLimit: 10
+
+parameters:
+  - name: IMAGE_RABBITMQ
+    required: true

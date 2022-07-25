@@ -28,6 +28,8 @@ services:
   provider_mq:
     build: .
     container_name: provider-mq
+    ports:
+      - "127.0.0.1:5051:5051" # Port for healthcheck
     networks:
       - rabbitmq-example
     depends_on:
@@ -40,6 +42,7 @@ services:
       MQ_CACERT: "/certs/provider_mq/cacert_mq.pem"
       MQ_CERT: "/certs/provider_mq/client_cert_mq.pem"
       MQ_KEY: "/certs/provider_mq/client_key_mq.pem"
+      MODEL_HOST: "webapp"
 
     volumes:
       - "./examples/certs/provider_mq:/certs/provider_mq:ro"

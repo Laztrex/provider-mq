@@ -74,5 +74,4 @@ func main() {
 	go service.Predict()
 
 	wg.Wait()
-
 }

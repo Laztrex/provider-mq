@@ -1,0 +1,33 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mlx-rabbitmq-client
+  labels:
+    app: mlx
+spec:
+  externalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: amqps
+      protocol: TCP
+      port: 5671
+      targetPort: amqps
+      nodePort: 30615
+    - name: amqp
+      protocol: TCP
+      port: 5672
+      targetPort: amqp
+      nodePort: 30640
+    - name: http
+      protocol: TCP
+      port: 15672
+      targetPort: http
+      nodePort: 30205
+  type: NodePort
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    deploy: mlx-rabbitmq
+status:
+  loadBalancer: {}

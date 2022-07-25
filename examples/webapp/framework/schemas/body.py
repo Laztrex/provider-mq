@@ -7,12 +7,10 @@ from pydantic import BaseModel
 
 @dataclass
 class FibBody:
-    data: List[int]
+    data: bytes
 
-    async def body(self):
-        return {
-            'data': self.data
-        }
+    async def body(self) -> str:
+        return self.data.decode('utf-8')
 
     @property
     def headers(self, *args, **kwargs):
