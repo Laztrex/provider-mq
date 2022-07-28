@@ -47,33 +47,16 @@ objects:
                     path: queue_config.yaml
                 defaultMode: 420
                 optional: false
-            - name: provider-gateway-mq-certs
+            - name: provider-mq-certs
               secret:
-                secretName: provider-gateway-mq-certs
+                secretName: provider-mq-certs
                 items:
                   - key: crt.pem
-                    path: client_cert_mq.pem
+                    path: client_cert.pem
                   - key: key.pem
-                    path: client_key_mq.pem
-                  - key: cacert_mq.pem
-                    path: cacert_mq.pem
-                  - key: server_cert.pem
-                    path: server_cert.pem
-                  - key: server_key.pem
-                    path: server_key.pem
-                  - key: trusted_crt.pem
-                    path: trusted_crt.pem
-                defaultMode: 288
-            - name: gin-certs
-              secret:
-                secretName: gin-certs
-                items:
-                  - key: crt.pem
-                    path: server_cert.pem
-                  - key: key.pem
-                    path: server_key.pem
-                  - key: trusted_crt.pem
-                    path: trusted_crt.pem
+                    path: client_key.pem
+                  - key: cacert.pem
+                    path: cacert.pem
                 defaultMode: 288
           containers:
             - resources:
@@ -107,9 +90,9 @@ objects:
                 failureThreshold: 10
               env:
                 - name: APPLICATION_NAME
-                  value: provider-mq
+                  value: ${NAME_PROJECT}
                 - name: PROJECT_NAME
-                  value: testing
+                  value: ${NAME_MODEL}
                 - name: LOG_LEVEL
                   value: debug
                 - name: MQ_ADMIN_USER
@@ -126,12 +109,8 @@ objects:
                   # amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@rabbitmq-headless.$(PROJECT_NAME).svc.cluster.local:5671/
                   value: >-
                     amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@${RMQ_HOST}:${RMQ_PORT}/
-                - name: MQ_CACERT
-                  value: /certs/gateway_mq/cacert_mq.pem
-                - name: MQ_CERT
-                  value: /certs/gateway_mq/client_cert_mq.pem
-                - name: MQ_KEY
-                  value: /certs/gateway_mq/client_key_mq.pem
+                - name: MODEL_HOST_ENV
+                  value: $(APPLICATION_NAME)_$(PROJECT_NAME)_SERVICE_HOST
               securityContext:
                 readOnlyRootFilesystem: false
               imagePullPolicy: Always
@@ -144,9 +123,9 @@ objects:
                   mountPath: /var/log
                 - name: tmp-dir
                   mountPath: /tmp/nginx
-                - name: provider-gateway-mq-certs
+                - name: provider-mq-certs
                   readOnly: true
-                  mountPath: /certs/gateway_mq
+                  mountPath: /certs/provider_mq
                 - name: queue-config
                   mountPath: /go/src/provider_mq/configs/queue_config.yaml
                   subPath: queue_config.yaml
@@ -166,4 +145,8 @@ parameters:
   - name: RMQ_HOST
     required: true
   - name: RMQ_PORT
+    required: true
+  - name: NAME_PROJECT
+    required: true
+  - name: NAME_MODEL
     required: true

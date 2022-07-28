@@ -15,6 +15,7 @@ import (
 	"provider_mq/internal/middlewares"
 	"provider_mq/internal/schemas"
 	"provider_mq/internal/utils"
+	"strings"
 	"time"
 )
 
@@ -35,11 +36,17 @@ func Predict() {
 	modelHost := utils.GetEnvVar("MODEL_HOST")
 	modelPort := utils.GetEnvVar("MODEL_PORT")
 	if modelHost == "" {
-		modelHost = consts.HostModel
+		checkModelHostEnv := utils.GetEnvVar("MODEL_HOST_ENV")
+		if checkModelHostEnv != "" {
+			modelHost = utils.GetEnvVar(strings.ToUpper(checkModelHostEnv))
+		} else {
+			modelHost = consts.DefaultHostModel
+		}
 	}
 	if modelPort == "" {
-		modelPort = consts.PortModel
+		modelPort = consts.DefaultPortModel
 	}
+
 	hostModel := &HostConfig{
 		host:     modelHost,
 		port:     modelPort,

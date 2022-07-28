@@ -11,29 +11,55 @@ This application allows you to call for execution an ML model located in a dedic
 
 *Prover-MQ* currently implements the following:
 
-* Publishing - REST request to ML model service
-* Defining queue parameters in a configuration file
+* The initiator publishes a message
+* After publishing - REST request to *ML model* service
+  * *provider-mq* establishes a TLS connection to the message broker server (RabbitMQ)
 * Application arranges sync/async calls with the model
-* Response from the model (sync)
-    * If the pod with the model crashes before being called or during the calculation - the message will not be lost
-      under certain conditions
-* Declare of exchange, queues on the *provider-mq* side - we do not trust the model
+* Defining queue parameters in a configuration file
+* *ML model* starts the calculation, the result is returned synchronously to *provider-mq*
+  * If the queue for responses (queue.out*) is not set, it is assumed that the initiator does not expect a response from the model. In this case, the model is a worker
+* *provider-mq* publishes the response to queue.out, it is assumed that the initiator listens to the output queue
+* In case of an unsuccessful attempt to launch the model for execution, the response is sent to the waiting queue with a deferred call (queue.dle*)
+* Declare of exchange, queues on the *provider-mq* side - we do not trust the model  
+
+*queue names are defined abstractly.
 
 The project will be updated.
 
+Tested on
+~~~
+>> go version
+go version go1.17.2 darwin/amd64
+~~~
+
 ## Usage
 
-The project uses global environment variables.
+The project uses global *environment variables*.
 
-| Name         |           Goal           |         Expected value example         |
-|--------------|:------------------------:|:--------------------------------------:|
-| RMQ_URL      | Host to connect RabbitMQ | "amqps://user:password@rabbitmq:5671/" |
-| MQ_CACERT    |            CA            |   "/certs/provider_mq/cacert_mq.pem"   |
-| MQ_CERT      |       Certificate        | "/certs/provider_mq/client_cert_mq.pem" |
-| MQ_KEY       |     Key certificate      | "/certs/provider_mq/client_key_mq.pem"  |
-| GIN_CERT     |    Server certificate    |  "/certs/provider_mq/server_cert.pem"   |
-| GIN_CERT_KEY |        Server key        |   "/certs/provider_mq/server_key.pem"   |
-| LOG_LEVEL    |      Logging level       |                "debug"                 |
+| Env Name       |                                Goal                                 |         Expected value example         |
+|----------------|:-------------------------------------------------------------------:|:--------------------------------------:|
+| RMQ_URL        |                      Host to connect RabbitMQ                       | "amqps://user:password@rabbitmq:5671/" |
+| LOG_LEVEL      |                            Logging level                            |                "debug"                 |
+| MODEL_HOST     |                      Host request to the model                      |               "0.0.0.0"                |
+| MODEL_HOST_ENV | Defining the project host in namespace (used instead of MODEL_HOST) |         "MLX_MLX_SERVICE_HOST"         |
+| MODEL_PORT     |                      Port request to the model                      |                 "8080"                 |
+
+and *constants*.
+
+| Const Name         |                    Goal                    |         Expected value example          |
+|--------------|:------------------------------------------:|:---------------------------------------:|
+| MqCACERT    |                     CA                     |   "/certs/provider_mq/cacert_mq.pem"    |
+| MqCERT      |                Certificate                 | "/certs/provider_mq/client_cert_mq.pem" |
+| MqKEY       |              Key certificate               | "/certs/provider_mq/client_key_mq.pem"  |
+| EnvFile                 |         Local env file in project          |                 ".env"                  |
+| EnvFileDirectory        |                Dir env file                |                   "."                   |
+| QueuesConf              |     Path to configration Queue declare     |       "configs/queue_config.yaml"       |
+| RequestIdHttpHeaderName |        Name Header for *request-id*        |                 ".env"                  |
+| LogPath                 |             Path to dump logs              |         "/var/log/metrics.log"          |
+| DefaultHostModel            |  Default url for the request to the model  |                "0.0.0.0"                |
+| DefaultPortModel        | Default port for the request to the model  |                 "8080"                  |
+| BasePath              | Base endpoint for the request to the model |               "/predict"                |
+| RestTimeout | Holding time of the model response channel |                   300                   |
 
 You can define the default values in the **.env** file of the project root.
 
@@ -63,6 +89,10 @@ The directory [examples/webapp](https://github.com/Laztrex/provider-mq/blob/mast
 ~~~
 >> go version
 go version go1.18.2 darwin/amd64
+~~~
+~~~
+>> rabbitmqctl version
+3.10.6
 ~~~
 
 ### Compose it
