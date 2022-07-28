@@ -80,12 +80,12 @@ func GetEnvVar(name string) string {
 }
 
 func GetTlsConf() *tls.Config {
-	caCert, err := os.ReadFile(GetEnvVar("_CACERT"))
+	caCert, err := os.ReadFile(GetEnvVar("MQ_CACERT"))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to read CACert")
 	}
 
-	cert, err := tls.LoadX509KeyPair(GetEnvVar("_CERT"), GetEnvVar("_KEY"))
+	cert, err := tls.LoadX509KeyPair(GetEnvVar("MQ_CERT"), GetEnvVar("MQ_KEY"))
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to read Certificate, Key")
 	}

@@ -126,6 +126,12 @@ objects:
                   # amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@rabbitmq-headless.$(PROJECT_NAME).svc.cluster.local:5671/
                   value: >-
                     amqps://$(MQ_ADMIN_USER):$(MQ_ADMIN_PASS)@${RMQ_HOST}:${RMQ_PORT}/
+                - name: MQ_CACERT
+                  value: /certs/gateway_mq/cacert_mq.pem
+                - name: MQ_CERT
+                  value: /certs/gateway_mq/client_cert_mq.pem
+                - name: MQ_KEY
+                  value: /certs/gateway_mq/client_key_mq.pem
               securityContext:
                 readOnlyRootFilesystem: false
               imagePullPolicy: Always

@@ -9,7 +9,7 @@ objects:
       name: provider-gateway-mq
       labels:
         app: mlx
-        deploy: mlx-provider-gateway--mq
+        deploy: mlx-provider-gateway-mq
     spec:
       strategy:
         type: Rolling
@@ -60,17 +60,6 @@ objects:
                   - key: server_cert.pem
                     path: server_cert.pem
                   - key: server_key.pem
-                    path: server_key.pem
-                  - key: trusted_crt.pem
-                    path: trusted_crt.pem
-                defaultMode: 288
-            - name: gin-certs
-              secret:
-                secretName: gin-certs
-                items:
-                  - key: crt.pem
-                    path: server_cert.pem
-                  - key: key.pem
                     path: server_key.pem
                   - key: trusted_crt.pem
                     path: trusted_crt.pem
@@ -138,12 +127,12 @@ objects:
                   value: /certs/gateway_mq/server_cert.pem
                 - name: GIN_CERT_KEY
                   value: /certs/gateway_mq/server_key.pem
-                - name: TOPIC
-                  value: ML.MQ
-                - name: QUEUE_NAME
-                  value: fib
-                - name: BINDING_KEY
-                  value: predict.*
+                - name: MQ_CACERT
+                  value: /certs/gateway_mq/cacert_mq.pem
+                - name: MQ_CERT
+                  value: /certs/gateway_mq/client_cert_mq.pem
+                - name: MQ_KEY
+                  value: /certs/gateway_mq/client_key_mq.pem
               securityContext:
                 readOnlyRootFilesystem: false
               ports:

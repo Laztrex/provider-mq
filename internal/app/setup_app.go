@@ -15,7 +15,7 @@ func SetupApp() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", routers.Health)
 
-	err := http.ListenAndServe(":5051", mux)
+	err := http.ListenAndServe(":5080", mux)
 	if err != nil {
 		if !errors.Is(err, http.ErrServerClosed) {
 			fmt.Printf("error running http server: %s\n", err)

@@ -43,6 +43,7 @@ services:
       MQ_CERT: "/certs/provider_mq/client_cert_mq.pem"
       MQ_KEY: "/certs/provider_mq/client_key_mq.pem"
       MODEL_HOST: "webapp"
+      MODEL_PORT: 8080
 
     volumes:
       - "./examples/certs/provider_mq:/certs/provider_mq:ro"

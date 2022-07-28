@@ -1,6 +1,6 @@
 FROM python:3
 
-ENV CN=hostname
+ENV CN=rabbitmq
 
 RUN git clone https://github.com/michaelklishin/tls-gen tls-gen
 RUN cd /tls-gen/basic && make PASSWORD= CN=${CN} && make verify
