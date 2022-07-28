@@ -119,7 +119,7 @@ You can also install [provider-**gateway**-mq](https://github.com/Laztrex/provid
     oc process -f conf/dc-mlx.yml --ignore-unknown-parameters --param-file="templates/template_mlx.env" | oc apply -f -
     ~~~
 
-![Image alt](https://github.com/Laztrex/provider-gateway-mq/blob/master/docs/pics/get_pods.png)
+![Image alt](https://github.com/Laztrex/provider-mq/blob/master/docs/pics/get_pods.png)
 
 > Fluentd sidecar is omitted from these sample config files.
 
