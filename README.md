@@ -88,9 +88,8 @@ The directory [examples/webapp](https://github.com/Laztrex/provider-mq/blob/mast
 
 ~~~
 >> go version
-go version go1.18.2 darwin/amd64
+go version go1.17.2 darwin/amd64
 ~~~
-
 ~~~
 >> rabbitmqctl version
 3.10.6
