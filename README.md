@@ -111,11 +111,13 @@ docker-compose up -d
 docker-compose logs -f -t
 ~~~
 
-Проверим:
+Check:
 
 ~~~
->> examples % curl -k --key certs/client/client_key_mq.pem --cert certs/client/client_cert_mq.pem https://0.0.0.0:5050/v1/predict -d '{"data": "[15, 29]"}' -H "RqUID: 52-42" -H "Content-Type: application/json" -H "routing-key: predict.online"
+>> curl http://127.0.0.1:5080/health
+{"status":"OK"}
 ~~~
+Now publish message to rabbitmq server.
 
 ## Objective
 
