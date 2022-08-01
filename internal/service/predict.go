@@ -101,13 +101,20 @@ func (c *HostConfig) waitReplyModel(msg amqp.Delivery) {
 
 	resp, err := client.Do(req)
 
-	if err, ok := err.(net.Error); ok && err.Timeout() {
-		log.Error().Err(err).Msgf("Timeout on send message to <Model Application>: %s", err.Error())
+	if err != nil {
 		msgReply := &schemas.MessageReplyError{
 			Error: err,
 			MsgMq: msg,
 		}
+
+		if err, ok := err.(net.Error); ok && err.Timeout() {
+			log.Error().Err(err).Msgf("Timeout on send request to <Model Application>: %s", err.Error())
+		} else {
+			log.Error().Err(err).Msgf("Error while send request to <Model Application>: %s", err.Error())
+		}
+
 		controllers.DLEChannel <- *msgReply
+
 	} else {
 
 		defer resp.Body.Close()

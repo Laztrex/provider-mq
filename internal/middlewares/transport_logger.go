@@ -33,6 +33,10 @@ func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.R
 	fmt.Printf("Sending request to %v\n", req.URL)
 
 	res, e = lrt.Proxy.RoundTrip(req)
+	if res == nil {
+		log.Error().Msg("Service <Model Application> unavailable")
+		return
+	}
 
 	latency := float32(time.Since(t).Seconds())
 

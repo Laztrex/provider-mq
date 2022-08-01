@@ -48,7 +48,7 @@ func (conn *RMQSpec) ConsumeMessages() {
 			if msg.CorrelationId == "" {
 				continue // utils.GetCorrelationId(),
 			}
-			log.Info().Msgf("Receive body: %v", msg.Body)
+			log.Info().Msgf("Receive msg with corrId: %v", msg.CorrelationId)
 
 			msgRequest := &schemas.MessageCreate{
 				RmqMessage: msg,
