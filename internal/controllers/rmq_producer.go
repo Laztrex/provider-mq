@@ -48,9 +48,17 @@ func (conn *RMQSpec) ProduceMessage() {
 
 		case errCh := <-DLEChannel:
 
-			err := errCh.MsgMq.Nack(false, false)
-			if err != nil {
-				log.Error().Err(err).Msg("Failed Nack msg")
+			if errCh.DLEStop != true {
+				err := errCh.MsgMq.Nack(false, false)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed Nack msg")
+				}
+			} else {
+				log.Info().Msgf("LIMIT: number of attempts to send a message has reached the maximum.\nMessage removed from dle")
+				err := errCh.MsgMq.Ack(false)
+				if err != nil {
+					log.Printf("ERROR: failed to ack message: %s", err.Error())
+				}
 			}
 		}
 	}

@@ -22,7 +22,7 @@ type MessageReplySuccess struct {
 
 // MessageReplyError is Response if error request to Model
 type MessageReplyError struct {
-	MsgMq  amqp.Delivery
-	Error  error
-	DLECnt int
+	MsgMq   amqp.Delivery
+	Error   error
+	DLEStop bool
 }

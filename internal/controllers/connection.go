@@ -19,6 +19,7 @@ type RMQSpec struct {
 	ReplyTo          string
 	Err              chan error
 	Args             RMQArgs
+	DleParams        utils.DleParams
 }
 
 type RMQArgs struct {
@@ -55,7 +56,7 @@ func (conn *RMQSpec) GetChannel() {
 
 	conn.Channel, err = conn.Connection.Channel()
 	if err != nil {
-		conn.OnError(err, "Failed to connect to RabbitMQ")
+		conn.OnError(err, "Failed to create channel to RabbitMQ")
 		panic(err)
 	}
 }
@@ -115,12 +116,12 @@ func (conn *RMQSpec) QueueBind() error {
 
 func (conn *RMQSpec) SetDLE() {
 	err := conn.Channel.ExchangeDeclare(
-		"dead_letter_exchange", // name
-		"fanout",               // type
-		true,                   // durable
-		false,                  // auto-deleted
-		false,                  // internal
-		false,                  // no-wait
+		conn.DleParams.DleExchange,     // name
+		conn.DleParams.DleExchangeType, // type
+		true,                           // durable
+		false,                          // auto-deleted
+		false,                          // internal
+		false,                          // no-wait
 		nil,
 	)
 	if err != nil {
@@ -128,26 +129,23 @@ func (conn *RMQSpec) SetDLE() {
 	}
 
 	_, err = conn.Channel.QueueDeclare(
-		"dead_letter_queue", // name
-		false,               // durable
-		false,               // delete when unused
-		false,               // exclusive
-		false,               // no-wait
-		amqp.Table{
-			"x-message-ttl":          60000,
-			"x-dead-letter-exchange": "ML.MQ",
-		},
+		conn.DleParams.DleQueue, // name
+		false,                   // durable
+		false,                   // delete when unused
+		false,                   // exclusive
+		false,                   // no-wait
+		conn.DleParams.DleArgs,
 	)
 	if err != nil {
 		fmt.Printf("error in ConsumeDeclare: %s", err)
 	}
 
 	err = conn.Channel.QueueBind(
-		"dead_letter_queue",    // name of the queue
-		"",                     // binding key
-		"dead_letter_exchange", // source exchange
-		false,                  // noWait
-		nil,                    // arguments
+		conn.DleParams.DleQueue,    // name of the queue
+		"",                         // binding key
+		conn.DleParams.DleExchange, // source exchange
+		false,                      // noWait
+		nil,                        // arguments
 	)
 	if err != nil {
 		fmt.Printf("error in BindQueue: %s", err)
@@ -160,10 +158,10 @@ func (conn *RMQSpec) Reconnect() error {
 	if err := conn.GetConnect(); err != nil {
 		return err
 	}
-	log.Printf("INFO: reconnection success: %s", conn.ConnectionString)
+	log.Printf("INFO: reconnection success: %s", conn.Queue)
 
 	conn.GetChannel()
-	log.Printf("INFO: reopened channel success: %s", conn.ConnectionString)
+	log.Printf("INFO: reopened channel success: %s", conn.Queue)
 
 	return nil
 }

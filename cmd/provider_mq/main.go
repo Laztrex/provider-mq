@@ -53,6 +53,7 @@ func main() {
 		}
 
 		if conf.DLE == true {
+			rmqConsumer.DleParams = conf.DleParams
 			rmqConsumer.SetDLE()
 		}
 

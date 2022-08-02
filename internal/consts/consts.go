@@ -11,6 +11,7 @@ const BasePath = "/predict"
 const RequestIdHttpHeaderName = "request-id"
 
 const RestTimeout = 300
+const DleRetry = 5
 
 const LogPath = "/var/log/metrics.log"
 

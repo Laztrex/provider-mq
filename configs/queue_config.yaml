@@ -3,6 +3,15 @@
   bindingKey: "predict.*"
   replyTo: "response"
   dle: true
+  dleParams: {
+    dleExchange: dead_letter_exchange,
+    dleExchangeType: fanout,
+    dleQueue: dead_letter_queue,
+    dleArgs: {
+      x-message-ttl: 60000,
+      x-dead-letter-exchange: ML.MQ,
+    }
+  }
   argQueue: {
     "x-dead-letter-exchange": dead_letter_exchange,
   }

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-type Config struct {
+type mqConfig struct {
 	QueueName  string     `yaml:"queueName"`
 	ReplyTo    string     `yaml:"replyTo"`
 	Topic      string     `yaml:"topic" default:""`
@@ -22,6 +22,14 @@ type Config struct {
 	RoutingKey string     `yaml:"routingKey" default:""`
 	DLE        bool       `yaml:"dle" default:"false"`
 	ArgsQueue  amqp.Table `yaml:"argQueue"`
+	DleParams  DleParams  `yaml:"dleParams"`
+}
+
+type DleParams struct {
+	DleExchange     string     `yaml:"dleExchange"`
+	DleExchangeType string     `yaml:"dleExchangeType"`
+	DleQueue        string     `yaml:"dleQueue"`
+	DleArgs         amqp.Table `yaml:"dleArgs"`
 }
 
 func init() {
@@ -37,15 +45,15 @@ func init() {
 
 // GetQueueConf function can be used to get configs value for PublishConnection
 // Modify ./queue_config.yaml (consts.QueuesConf) for change params
-func GetQueueConf() []Config {
-	var configs []Config
+func GetQueueConf() []mqConfig {
+	var configs []mqConfig
 
 	source, err := os.ReadFile(consts.QueuesConf)
 
 	if err != nil {
 		log.Debug().Msgf("failed reading config file: %v\n", err)
 
-		configs = append(configs, Config{
+		configs = append(configs, mqConfig{
 			QueueName:  "fib",
 			ReplyTo:    "response",
 			Topic:      "",
