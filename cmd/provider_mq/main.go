@@ -30,12 +30,14 @@ func main() {
 		rmqConsumer.OnError(err, "Failed to connect to RabbitMQ")
 		panic(err)
 	}
+	defer rmqConsumer.Connection.Close()
 
 	err = rmqProducer.GetConnect()
 	if err != nil {
 		rmqProducer.OnError(err, "Failed to connect to RabbitMQ")
 		panic(err)
 	}
+	defer rmqProducer.Connection.Close()
 
 	wg.Add(len(configs) + 1)
 	for _, conf := range configs {

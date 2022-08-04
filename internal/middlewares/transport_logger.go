@@ -18,7 +18,7 @@ type LoggerTransportRoundTripper struct {
 }
 
 func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.Response, e error) {
-	var requestId, msgRes string
+	var requestId, resStatus, exception string
 
 	requestId = req.Header.Get(consts.RequestIdHttpHeaderName)
 	if requestId == "" {
@@ -26,44 +26,44 @@ func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.R
 		req.Header.Set(consts.RequestIdHttpHeaderName, requestId)
 	}
 
-	method := req.Method
 	path := req.URL.Path
 	t := time.Now()
 
 	fmt.Printf("Sending request to %v\n", req.URL)
 
 	res, e = lrt.Proxy.RoundTrip(req)
+
+	latency := float32(time.Since(t).Seconds())
+
 	if res == nil {
 		log.Error().Msg("Service <Model Application> unavailable")
 		return
 	}
 
-	latency := float32(time.Since(t).Seconds())
-
 	if e != nil || res.StatusCode != 200 {
-		msgRes = "FAILURE"
+		resStatus = "FAILURE"
+		exception = "error"
 	} else {
-		msgRes = "SUCCESS"
+		resStatus = "SUCCESS"
 	}
 
-	stdlog.Printf("%s %s: '%s' %f - [%s]", msgRes, path, res.Status, latency, requestId)
-	logToFile(res.StatusCode, requestId, method, path, latency, msgRes)
+	stdlog.Printf("%s %s: '%s' %f - [%s]", resStatus, path, res.Status, latency, requestId)
+	logToFile(requestId, latency, exception, resStatus)
 
 	return
 }
 
-func logToFile(status int, requestId string, method string, path string, latency float32, msg string) {
+func logToFile(requestId string, latency float32, exception string, resStatus string) {
 	tempFile, err := os.OpenFile(consts.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Error().Err(err).Msg("there was an error creating a temporary file four our log")
 	}
 
 	fileLogger := zerolog.New(tempFile)
-	fileLogger.Info().
-		Int("status", status).
+	fileLogger.Log().
 		Str("request_id", requestId).
-		Str("method", method).
-		Str("path", path).
-		Float32("latency", latency).
-		Msg(msg)
+		Str("status", resStatus).
+		Float32("provider_mq_response_seconds", latency).
+		Str("exception", exception).
+		Msg(time.Now().Format(time.RFC3339))
 }

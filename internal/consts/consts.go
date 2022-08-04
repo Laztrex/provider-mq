@@ -13,7 +13,7 @@ const RequestIdHttpHeaderName = "request-id"
 const RestTimeout = 300
 const DleRetry = 5
 
-const LogPath = "/var/log/metrics.log"
+const LogPath = "/var/log/provider-mq-metrics.log"
 
 const (
 	MqCACERT = "/certs/provider_mq/cacert.pem"
