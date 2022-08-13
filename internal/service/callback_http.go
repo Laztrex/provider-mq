@@ -92,19 +92,3 @@ func (c *HostConfig) waitReplyModel(msg amqp.Delivery) {
 		controllers.PublishChannel <- *msgReply
 	}
 }
-
-// canRetry checks the number of attempts to release dle
-func canRetry(h amqp.Table) bool {
-
-	if vDle, ok := h["x-death"]; ok {
-		if j, ok := vDle.([]interface{}); ok {
-			if dleCount, ok := j[0].(amqp.Table)["count"]; ok {
-				log.Info().Msgf("value count: %v, type count: %T", dleCount, dleCount)
-				if dleCount.(int64) > consts.DleRetry {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}

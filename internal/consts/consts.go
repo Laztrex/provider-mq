@@ -5,8 +5,9 @@ const EnvFileDirectory = "."
 
 const QueuesConf = "configs/queue_config.yaml"
 
-const DefaultHostModel = "localhost"
+const DefaultHostModel = "webapp"
 const DefaultPortModel = "8080"
+
 const BasePath = "/predict"
 const RequestIdHttpHeaderName = "request-id"
 
