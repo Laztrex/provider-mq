@@ -128,6 +128,6 @@ Publish message in Rabbitmq cluster.
 Or used *[provider-gateway-mq](https://github.com/Laztrex/provider-gateway-mq)*
 
 ~~~
-curl -k --key client_key.pem --cert client_cert.pem -d '{"data": "[29, 29]"}' -H "RqUID: 52-52-52-52" -H "Content-Type: application/json" -H "routing-key: predict.now" https://mlx.my-fqdn/v1/predict
+curl -k --key client_key.pem --cert client_cert.pem -d '{"data": "[29, 29]"}' -H "request-id: 42" -H "Content-Type: application/json" -H "routing-key: predict.now" https://mlx.my-fqdn/v1/predict
 {"result": 42}
 ~~~

@@ -11,7 +11,7 @@ spec:
       port: 5050
       targetPort: 5050
   selector:
-    deploy: mlx-provider-mq
+    deploy: mlx-provider-gateway-mq
   type: ClusterIP
   sessionAffinity: None
   ipFamilies:
