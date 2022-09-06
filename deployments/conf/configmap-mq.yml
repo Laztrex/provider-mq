@@ -12,7 +12,3 @@ data:
       argQueue: {
         "x-dead-letter-exchange": dead_letter_exchange,
       }
-    - topic: ML.MQ
-      queueName: manage
-      bindingKey: "metrics.*"
-      replyTo: "response"

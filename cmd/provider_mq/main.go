@@ -68,8 +68,8 @@ func main() {
 		}(rmqConsumer)
 
 		go func(producer controllers.RMQSpec) {
-			log.Info().Msgf("Run consuming queue '%v'", producer.Queue)
-			producer.ProduceMessage()
+			log.Info().Msgf("Run producing queue '%v'", producer.Queue)
+			producer.ProduceMessages()
 		}(rmqProducer)
 
 	}

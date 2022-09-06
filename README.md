@@ -74,11 +74,6 @@ Configuration file is also provided to define protocol settings - [queue_config.
   argQueue: {
     "x-dead-letter-exchange": dead_letter_exchange,
   }
-- topic: ML.MQ
-  queueName: manage
-  bindingKey: "metrics.*"
-  replyTo: "response"
-
 ~~~
 
 Currently, only Topic can be defined from the configuration file for Exchange (but Direct can also be defined). Other exchanges - will be supplemented.

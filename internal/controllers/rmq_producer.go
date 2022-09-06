@@ -12,7 +12,7 @@ func (conn *RMQSpec) ProduceDeclare() {
 
 }
 
-func (conn *RMQSpec) ProduceMessage() {
+func (conn *RMQSpec) ProduceMessages() {
 	for {
 		select {
 		case err := <-conn.Err:
