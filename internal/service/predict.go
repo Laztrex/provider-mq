@@ -8,11 +8,7 @@ import (
 
 func Predict() {
 
-	//errg := new(errgroup.Group)
-
-	go func() {
-		app.SetupApp()
-	}()
+	go app.SetupApp()
 
 	hostModel := getHostModel()
 
@@ -23,7 +19,7 @@ func Predict() {
 			msg := msgRequest
 
 			go func(msg schemas.MessageCreate) {
-				hostModel.waitRpcReplyModel(msg.RmqMessage)
+				hostModel.waitReplyModel(msg.RmqMessage)
 			}(msg)
 		}
 	}

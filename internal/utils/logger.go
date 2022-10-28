@@ -30,5 +30,3 @@ func init() {
 	log.Logger = log.With().Str("service", "controller-mq").Logger()
 	log.Logger = log.With().Caller().Logger()
 }
-
-//docker-compose logs -f -t

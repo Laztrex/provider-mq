@@ -4,11 +4,13 @@ import (
 	"github.com/streadway/amqp"
 )
 
+type MessageRest map[string]interface{}
+
 type MessageCreate struct {
 	RmqMessage amqp.Delivery
 }
 
-type MessageRest struct {
+type MessageRpc struct {
 	Data string `json:"data"`
 }
 

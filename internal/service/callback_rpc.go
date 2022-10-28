@@ -17,10 +17,10 @@ import (
 
 func (c *HostConfig) waitRpcReplyModel(msg amqp.Delivery) {
 
-	newMsg := &schemas.MessageRest{
+	newMsg := &schemas.MessageRpc{
 		Data: string(msg.Body),
 	}
-	newData, err := json.Marshal(*newMsg)
+	newData, err := json.Marshal(newMsg)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed parse json body")
 	}

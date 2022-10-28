@@ -22,6 +22,7 @@ func (conn *RMQSpec) ProduceMessages() {
 			}
 
 		case msg := <-PublishChannel:
+			log.Printf("PRODUCE: %s", conn.Queue)
 
 			err := msg.MsgMq.Ack(false)
 			if err != nil {
@@ -31,7 +32,7 @@ func (conn *RMQSpec) ProduceMessages() {
 			err = conn.Channel.Publish(
 				"", // exchange
 				//conn.RoutingKey, // routing key
-				conn.Queue,
+				msg.MsgMq.ReplyTo,
 				false, // mandatory
 				false, // immediate
 				amqp.Publishing{
