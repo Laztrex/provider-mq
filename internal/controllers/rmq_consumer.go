@@ -45,7 +45,6 @@ func (conn *RMQSpec) ConsumeMessages() {
 
 		case msg := <-msgChannel:
 			log.Printf("CONSUME: %s", conn.Queue)
-
 			if msg.CorrelationId == "" {
 				continue // utils.GetCorrelationId(),
 			}

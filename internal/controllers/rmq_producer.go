@@ -23,7 +23,6 @@ func (conn *RMQSpec) ProduceMessages() {
 
 		case msg := <-PublishChannel:
 			log.Printf("PRODUCE: %s", conn.Queue)
-
 			err := msg.MsgMq.Ack(false)
 			if err != nil {
 				log.Printf("ERROR: failed to ack message: %s", err.Error())

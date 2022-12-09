@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
-	"provider_mq/internal/routers"
+	"provider_mq/internal/transport"
 )
 
 // SetupApp Function to setup the app object
@@ -13,7 +13,7 @@ func SetupApp() *http.ServeMux {
 	log.Info().Msg("Initializing service")
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", routers.Health)
+	mux.HandleFunc("/health", transport.Health)
 
 	err := http.ListenAndServe(":5080", mux)
 	if err != nil {

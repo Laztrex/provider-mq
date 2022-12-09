@@ -4,13 +4,14 @@ import (
 	"provider_mq/internal/app"
 	"provider_mq/internal/controllers"
 	"provider_mq/internal/schemas"
+	"provider_mq/internal/transport"
 )
 
 func Predict() {
 
 	go app.SetupApp()
 
-	hostModel := getHostModel()
+	hostModel := transport.GetHostModel()
 
 	for {
 		select {
@@ -19,7 +20,7 @@ func Predict() {
 			msg := msgRequest
 
 			go func(msg schemas.MessageCreate) {
-				hostModel.waitReplyModel(msg.RmqMessage)
+				hostModel.WaitReplyModel(msg.RmqMessage)
 			}(msg)
 		}
 	}

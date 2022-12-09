@@ -1,4 +1,4 @@
-package service
+package transport
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ import (
 	"provider_mq/internal/schemas"
 )
 
-func (c *HostConfig) waitReplyModel(msg amqp.Delivery) {
+func (c *HostConfig) WaitReplyModel(msg amqp.Delivery) {
 
 	newMsg := make(schemas.MessageRest)
 	err := json.Unmarshal(msg.Body, &newMsg)

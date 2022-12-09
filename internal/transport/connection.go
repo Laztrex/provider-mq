@@ -1,4 +1,4 @@
-package service
+package transport
 
 import (
 	"github.com/rs/zerolog/log"
@@ -14,7 +14,7 @@ type HostConfig struct {
 	basePath string
 }
 
-func getHostModel() *HostConfig {
+func GetHostModel() *HostConfig {
 
 	modelHost := utils.GetEnvVar("MODEL_HOST")
 	modelPort := utils.GetEnvVar("MODEL_PORT")

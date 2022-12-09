@@ -3,7 +3,6 @@
 // 	protoc-gen-go v1.28.1
 // 	protoc        v3.14.0
 // source: service.proto
-
 package modelrpc
 
 import (
