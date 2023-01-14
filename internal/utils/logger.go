@@ -10,10 +10,12 @@ import (
 // Modify the init function if you change logging library
 // Find and replace the imports in the rest of the app
 func init() {
-	logLevel := GetEnvVar("LOG_LEVEL")
 
+	logLevel := GetEnvVar("LOG_LEVEL")
+	log.Info().Msgf("LEVEL %v", logLevel)
 	if logLevel == "debug" {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		log.Logger = log.With().Caller().Logger()
 	} else {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
@@ -28,5 +30,4 @@ func init() {
 	}
 
 	log.Logger = log.With().Str("service", "controller-mq").Logger()
-	log.Logger = log.With().Caller().Logger()
 }

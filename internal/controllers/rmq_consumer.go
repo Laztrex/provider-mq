@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"github.com/rs/zerolog/log"
+
+	"provider_mq/internal/consts"
 	"provider_mq/internal/schemas"
 )
 
@@ -44,11 +46,12 @@ func (conn *RMQSpec) ConsumeMessages() {
 			}
 
 		case msg := <-msgChannel:
-			log.Printf("CONSUME: %s", conn.Queue)
 			if msg.CorrelationId == "" {
 				continue // utils.GetCorrelationId(),
 			}
-			log.Info().Msgf("Receive msg with corrId: %v", msg.CorrelationId)
+			log.Info().
+				Str(consts.KeyCorrelationId, msg.CorrelationId).
+				Msgf("Receive msg with corrId: %v", msg.CorrelationId)
 
 			msgRequest := &schemas.MessageCreate{
 				RmqMessage: msg,

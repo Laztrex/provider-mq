@@ -3,9 +3,10 @@ package transport
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
+	"strings"
+
 	"provider_mq/internal/consts"
 	"provider_mq/internal/utils"
-	"strings"
 )
 
 type HostConfig struct {
@@ -24,11 +25,11 @@ func GetHostModel() *HostConfig {
 		if checkModelHostEnv != "" {
 			modelHost = utils.GetEnvVar(strings.ToUpper(checkModelHostEnv))
 		} else {
-			modelHost = consts.DefaultHostModel
+			modelHost = consts.HostModelDefault
 		}
 	}
 	if modelPort == "" {
-		modelPort = consts.DefaultPortModel
+		modelPort = consts.PortModelDefault
 	}
 
 	hostModel := &HostConfig{

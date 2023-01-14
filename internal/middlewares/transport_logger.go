@@ -8,8 +8,9 @@ import (
 	stdlog "log"
 	"net/http"
 	"os"
-	"provider_mq/internal/consts"
 	"time"
+
+	"provider_mq/internal/consts"
 )
 
 // LoggerTransportRoundTripper This type implements the http.RoundTripper interface
@@ -20,10 +21,10 @@ type LoggerTransportRoundTripper struct {
 func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.Response, e error) {
 	var requestId, resStatus, exception string
 
-	requestId = req.Header.Get(consts.RequestIdHttpHeaderName)
+	requestId = req.Header.Get(consts.KeyRequestId)
 	if requestId == "" {
 		requestId = uuid.New().String()
-		req.Header.Set(consts.RequestIdHttpHeaderName, requestId)
+		req.Header.Set(consts.KeyRequestId, requestId)
 	}
 
 	path := req.URL.Path
@@ -32,11 +33,10 @@ func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.R
 	fmt.Printf("Sending request to %v\n", req.URL)
 
 	res, e = lrt.Proxy.RoundTrip(req)
-
 	latency := float32(time.Since(t).Seconds())
 
 	if res == nil {
-		log.Error().Msg("Service <Model Application> unavailable")
+		log.Error().Str(consts.KeyRequestId, requestId).Msg("Service <Model Application> unavailable")
 		return
 	}
 
@@ -56,12 +56,12 @@ func (lrt LoggerTransportRoundTripper) RoundTrip(req *http.Request) (res *http.R
 func logToFile(requestId string, latency float32, exception string, resStatus string) {
 	tempFile, err := os.OpenFile(consts.LogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Error().Err(err).Msg("there was an error creating a temporary file four our log")
+		log.Error().Err(err).Str(consts.KeyRequestId, requestId).Msg("there was an error creating a temporary file four our log")
 	}
 
 	fileLogger := zerolog.New(tempFile)
 	fileLogger.Log().
-		Str("request_id", requestId).
+		Str(consts.KeyRequestId, requestId).
 		Str("status", resStatus).
 		Float32("provider_mq_response_seconds", latency).
 		Str("exception", exception).

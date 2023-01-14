@@ -1,7 +1,7 @@
 # Provider-MQ
 
 The project is part of a cloud-based microservice solution for interacting with an ML-application and related
-infrastructure components.  
+infrastructure components.
 
 
 This application allows you to call for execution an ML model located in a dedicated server.   
@@ -9,7 +9,7 @@ This application allows you to call for execution an ML model located in a dedic
 
 ## Description
 
-*Prover-MQ* currently implements the following:
+*Provider-MQ* currently implements the following:
 
 * The initiator publishes a message
 * After publishing - REST request to *ML model* service
@@ -20,7 +20,7 @@ This application allows you to call for execution an ML model located in a dedic
   * If the queue for responses (queue.out*) is not set, it is assumed that the initiator does not expect a response from the model. In this case, the model is a worker
 * *provider-mq* publishes the response to queue.out, it is assumed that the initiator listens to the output queue
 * In case of an unsuccessful attempt to launch the model for execution, the response is sent to the waiting queue with a deferred call (queue.dle*)
-* Declare of exchange, queues on the *provider-mq* side - we do not trust the model  
+* Declare of exchange, queues on the *provider-mq* side - we do not trust the model
 
 *queue names are defined abstractly.
 
@@ -29,37 +29,44 @@ The project will be updated.
 Tested on
 ~~~
 >> go version
-go version go1.17.2 darwin/amd64
+go version go1.18.2 darwin/amd64
+~~~
+~~~
+>> rabbitmqctl version
+3.10.6
 ~~~
 
 ## Usage
 
 The project uses global *environment variables*.
 
-| Env Name       |                                Goal                                 |         Expected value example         |
-|----------------|:-------------------------------------------------------------------:|:--------------------------------------:|
-| RMQ_URL        |                      Host to connect RabbitMQ                       | "amqps://user:password@rabbitmq:5671/" |
-| LOG_LEVEL      |                            Logging level                            |                "debug"                 |
-| MODEL_HOST     |                      Host request to the model                      |               "0.0.0.0"                |
-| MODEL_HOST_ENV | Defining the project host in namespace (used instead of MODEL_HOST) |         "MLX_MLX_SERVICE_HOST"         |
-| MODEL_PORT     |                      Port request to the model                      |                 "8080"                 |
+| Env Name       |                                Goal                                 |         Expected value example          |
+|----------------|:-------------------------------------------------------------------:|:---------------------------------------:|
+| RMQ_URL        |                      Host to connect RabbitMQ                       | "amqps://user:password@rabbitmq:5671/"  |
+| LOG_LEVEL      |                            Logging level                            |                 "debug"                 |
+| MODEL_HOST     |                      Host request to the model                      |                "0.0.0.0"                |
+| MODEL_HOST_ENV | Defining the project host in namespace (used instead of MODEL_HOST) |         "MLX_MLX_SERVICE_HOST"          |
+| MODEL_PORT     |                      Port request to the model                      |                 "8080"                  |
+| MQ_CACERT      |                       Bundle of Certificates                        |   "/certs/provider_mq/cacert_mq.pem"    |
+| MQ_CERT        |                             Certificate                             | "/certs/provider_mq/client_cert_mq.pem" |
+| MQ_KEY         |                           Key certificate                           | "/certs/provider_mq/client_key_mq.pem"  |
 
 and *constants*.
 
-| Const Name         |                    Goal                    |         Expected value example          |
-|--------------|:------------------------------------------:|:---------------------------------------:|
-| MqCACERT    |                     CA                     |   "/certs/provider_mq/cacert_mq.pem"    |
-| MqCERT      |                Certificate                 | "/certs/provider_mq/client_cert_mq.pem" |
-| MqKEY       |              Key certificate               | "/certs/provider_mq/client_key_mq.pem"  |
+| Const Name              |                    Goal                    |         Expected value example          |
+|-------------------------|:------------------------------------------:|:---------------------------------------:|
+| MqCaCertDefault         |           Bundle of certificates           |   "/certs/provider_mq/cacert_mq.pem"    |
+| MqCertDefault           |                Certificate                 | "/certs/provider_mq/client_cert_mq.pem" |
+| MqCertKeyDefault        |              Key certificate               | "/certs/provider_mq/client_key_mq.pem"  |
 | EnvFile                 |         Local env file in project          |                 ".env"                  |
 | EnvFileDirectory        |                Dir env file                |                   "."                   |
 | QueuesConf              |     Path to configration Queue declare     |       "configs/queue_config.yaml"       |
 | RequestIdHttpHeaderName |        Name Header for *request-id*        |                 ".env"                  |
 | LogPath                 |             Path to dump logs              |         "/var/log/metrics.log"          |
-| DefaultHostModel            |  Default url for the request to the model  |                "0.0.0.0"                |
-| DefaultPortModel        | Default port for the request to the model  |                 "8080"                  |
-| BasePath              | Base endpoint for the request to the model |               "/predict"                |
-| RestTimeout | Holding time of the model response channel |                   300                   |
+| HostModelDefault        |  Default url for the request to the model  |                "0.0.0.0"                |
+| PortModelDefault        | Default port for the request to the model  |                 "8080"                  |
+| BasePath                | Base endpoint for the request to the model |               "/predict"                |
+| RestTimeout             | Holding time of the model response channel |                   300                   |
 
 You can define the default values in the **.env** file of the project root.
 
@@ -77,18 +84,7 @@ Configuration file is also provided to define protocol settings - [queue_config.
 ~~~
 
 Currently, only Topic can be defined from the configuration file for Exchange (but Direct can also be defined). Other exchanges - will be supplemented.
-Flexible settings for the queue - lifetime, autodelete, types, arguments and etc. currently not included in the configuration file, the parameters can be configured inside the code optionally.  
-
-The directory [examples/webapp](https://github.com/Laztrex/provider-mq/blob/master/examples/webapp/) contains a simple web application for testing the project.
-
-~~~
->> go version
-go version go1.17.2 darwin/amd64
-~~~
-~~~
->> rabbitmqctl version
-3.10.6
-~~~
+Flexible settings for the queue - lifetime, autodelete, types, arguments and etc. currently not included in the configuration file, the parameters can be configured inside the code optionally.
 
 ### Compose it
 
@@ -173,7 +169,7 @@ It is also necessary to provide for the creation of certificates for the *gin*-s
 ### Initial setup RabbitMQ
 
 When initializing the RabbitMQ client, you can set initial settings.  
-In particular, you can set available accounts and define a configuration file. See example in [examples/rabbit-mq](https://github.com/Laztrex/provider-mq/blob/master/examples/rabbit-mq/).  
+In particular, you can set available accounts and define a configuration file. See example in [examples/rabbit-mq](examples/rabbit-mq/).
 
 Check the list of available users:
 

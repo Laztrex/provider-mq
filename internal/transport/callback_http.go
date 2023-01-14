@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -50,44 +50,56 @@ func (c *HostConfig) WaitReplyModel(msg amqp.Delivery) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		dleStop := canRetry(msg.Headers)
-		msgReply := &schemas.MessageReplyError{
-			Error:   err,
-			MsgMq:   msg,
-			DLEStop: dleStop,
-		}
 
-		if err, ok := err.(net.Error); ok && err.Timeout() {
-			log.Error().Err(err).Msgf("Timeout on send request to <Model Application>: %s", err.Error())
-		} else {
-			log.Error().Err(err).Msgf("Error while send request to <Model Application>: %s", err.Error())
-		}
-
-		controllers.DLEChannel <- *msgReply
+		pushFailureResponse(&msg, resp, err)
 
 	} else {
 
-		defer resp.Body.Close()
+		pushSuccessResponse(&msg, resp)
 
-		response, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Error().Err(err).Msg("Error read Response")
-		}
-
-		headers := make(amqp.Table)
-
-		for k, v := range resp.Header {
-			headers[k] = v[0]
-			//headers[textproto.CanonicalMIMEHeaderKey(k)] = v[0]
-		}
-
-		msgReply := &schemas.MessageReplySuccess{
-			CorrelationId: msg.CorrelationId,
-			Data:          response,
-			Headers:       headers,
-			MsgMq:         msg,
-		}
-
-		controllers.PublishChannel <- *msgReply
 	}
+}
+
+func pushSuccessResponse(msg *amqp.Delivery, resp *http.Response) {
+	defer resp.Body.Close()
+
+	response, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Error read Response")
+	}
+
+	headers := make(amqp.Table)
+
+	for k, v := range resp.Header {
+		headers[k] = v[0]
+		//headers[textproto.CanonicalMIMEHeaderKey(k)] = v[0]
+	}
+
+	msgReply := &schemas.MessageReplySuccess{
+		CorrelationId: msg.CorrelationId,
+		Data:          response,
+		Headers:       headers,
+		MsgMq:         *msg,
+		RequestId:     resp.Header.Get(consts.KeyRequestId),
+	}
+
+	controllers.PublishChannel <- *msgReply
+}
+
+func pushFailureResponse(msg *amqp.Delivery, resp *http.Response, err error) {
+	dleStop := canRetry(msg.Headers)
+	msgReply := &schemas.MessageReplyError{
+		Error:     err,
+		MsgMq:     *msg,
+		DLEStop:   dleStop,
+		RequestId: resp.Header.Get(consts.KeyRequestId),
+	}
+
+	if err, ok := err.(net.Error); ok && err.Timeout() {
+		log.Error().Err(err).Msgf("Timeout on send request to <Model Application>: %s", err.Error())
+	} else {
+		log.Error().Err(err).Msgf("Error while send request to <Model Application>: %s", err.Error())
+	}
+
+	controllers.DLEChannel <- *msgReply
 }

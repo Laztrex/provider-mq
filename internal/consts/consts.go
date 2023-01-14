@@ -6,18 +6,22 @@ const (
 
 	QueuesConf = "configs/queue_config.yaml"
 
-	DefaultHostModel = "webapp"
-	DefaultPortModel = "8080"
+	HostModelDefault = "webapp"
+	PortModelDefault = "8080"
 
-	BasePath                = "/query"
-	RequestIdHttpHeaderName = "request-id"
+	BasePath = "/query"
 
 	RestTimeout = 300
 	DleRetry    = 5
 
-	LogPath = "/var/log/provider-mq-metrics.log"
+	MqCaCertDefault  = "/certs/provider_mq/cacert.pem"
+	MqCertDefault    = "/certs/provider_mq/client_cert.pem"
+	MqCertKeyDefault = "/certs/provider_mq/client_key.pem"
 
-	MqCACERT = "/certs/provider_mq/cacert.pem"
-	MqCERT   = "/certs/provider_mq/client_cert.pem"
-	MqKEY    = "/certs/provider_mq/client_key.pem"
+	LogPath = "/var/log/metrics.log"
+)
+
+const (
+	KeyRequestId     = "RqUID"
+	KeyCorrelationId = "CorrID"
 )

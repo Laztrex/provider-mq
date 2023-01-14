@@ -3,6 +3,8 @@ package controllers
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
+
+	"provider_mq/internal/consts"
 )
 
 func (conn *RMQSpec) ProduceDeclare() {
@@ -22,10 +24,22 @@ func (conn *RMQSpec) ProduceMessages() {
 			}
 
 		case msg := <-PublishChannel:
-			log.Printf("PRODUCE: %s", conn.Queue)
+			//var rcvRequestId string
+			//if _, ok := msg.Headers[consts.KeyRequestId]; ok {
+			//	rcvRequestId = msg.Headers[consts.KeyRequestId].(string)
+			//} else {
+			//	rcvRequestId = ""
+			//}
+
+			log.Info().
+				Str(consts.KeyRequestId, msg.RequestId).
+				Msgf("PRODUCE: %s", conn.Queue)
+
 			err := msg.MsgMq.Ack(false)
 			if err != nil {
-				log.Printf("ERROR: failed to ack message: %s", err.Error())
+				log.Error().Err(err).
+					Str(consts.KeyRequestId, msg.RequestId).
+					Msgf("ERROR: failed to ack message: %s", err.Error())
 			}
 
 			err = conn.Channel.Publish(
@@ -42,22 +56,33 @@ func (conn *RMQSpec) ProduceMessages() {
 				},
 			)
 			if err != nil {
-				log.Err(err).Msgf("ERROR: fail to publish msg: %s", msg.CorrelationId)
+				log.Error().Err(err).
+					Str(consts.KeyCorrelationId, msg.CorrelationId).
+					Msg("ERROR: fail to publish msg")
 			}
-			log.Printf("INFO: [%v] - published", msg.CorrelationId)
+			log.Info().
+				Str(consts.KeyCorrelationId, msg.CorrelationId).
+				Msg("message published")
 
-		case errCh := <-DLEChannel:
+		case errMsg := <-DLEChannel:
 
-			if errCh.DLEStop != true {
-				err := errCh.MsgMq.Nack(false, false)
+			if errMsg.DLEStop != true {
+				err := errMsg.MsgMq.Nack(false, false)
 				if err != nil {
-					log.Error().Err(err).Msg("Failed Nack msg")
+					log.Error().Err(err).
+						Str(consts.KeyCorrelationId, errMsg.MsgMq.CorrelationId).
+						Msg("Failed Nack msg")
 				}
 			} else {
-				log.Info().Msgf("LIMIT: number of attempts to send a message has reached the maximum.\nMessage removed from dle")
-				err := errCh.MsgMq.Ack(false)
+				log.Info().
+					Str(consts.KeyCorrelationId, errMsg.MsgMq.CorrelationId).
+					Msgf("LIMIT: number of attempts to send a message has reached the maximum.\n" +
+						"Message removed from dle")
+				err := errMsg.MsgMq.Ack(false)
 				if err != nil {
-					log.Printf("ERROR: failed to ack message: %s", err.Error())
+					log.Error().Err(err).
+						Str(consts.KeyCorrelationId, errMsg.MsgMq.CorrelationId).
+						Msgf("ERROR: failed to ack message: %s", err.Error())
 				}
 			}
 		}
